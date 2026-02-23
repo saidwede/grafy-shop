@@ -29,7 +29,8 @@ export default function Home() {
     <main className="max-w-7xl mx-auto px-4 py-8 md:px-8 lg:px-12">
       <Hero />
 
-      <div className="text-center mb-12">
+      <div id="categories" className="text-center mb-12 scroll-mt-32">
+
         <h2 className="text-3xl md:text-4xl font-black text-black mb-4 tracking-tighter">
           {t('cat_section_title')}
         </h2>
