@@ -247,7 +247,7 @@ export default function Header() {
 
                             {/* Search Results Dropdown */}
                             {isSearchOpen && searchQuery && (
-                                <div className="absolute top-full right-0 mt-3 w-full bg-white border border-black/10 rounded-2xl shadow-2xl overflow-hidden z-[310] animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="absolute top-full right-0 mt-3 w-full bg-white border border-black/10 rounded-2xl shadow-2xl overflow-hidden z-310 animate-in fade-in slide-in-from-top-2 duration-200">
                                     {filteredResults.length > 0 ? (
                                         <div className="py-2">
                                             {filteredResults.map((result) => (

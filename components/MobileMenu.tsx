@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { X, Languages, ChevronRight, ShoppingCart, User, Heart } from 'lucide-react';
@@ -15,11 +15,11 @@ interface MobileMenuProps {
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const { t, locale, setLocale } = useLanguage();
 
-    const menuVariants = {
+    const menuVariants: Variants = {
         closed: {
             x: "-100%",
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 400,
                 damping: 40
             }
@@ -27,7 +27,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         open: {
             x: 0,
             transition: {
-                type: "spring",
+                type: "spring" as const,
                 stiffness: 400,
                 damping: 40
             }
@@ -39,7 +39,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         open: { opacity: 1 }
     };
 
-    const linkVariants = {
+    const linkVariants: Variants = {
         closed: { opacity: 0, x: -20 },
         open: (i: number) => ({
             opacity: 1,
@@ -47,7 +47,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             transition: {
                 delay: 0.1 + i * 0.08,
                 duration: 0.4,
-                ease: [0.22, 1, 0.36, 1]
+                ease: [0.22, 1, 0.36, 1] as const
             }
         })
     };

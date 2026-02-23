@@ -8,9 +8,9 @@ import ProductCard from '@/components/ProductCard';
 
 // Mock Favorites Data
 const MOCK_FAVORITES = [
-    { id: '1', nameKey: 'prod_t_shirt', price: 29.99, imageSrc: '/images/products/classic-tshirt.png', category: 'T-Shirts' },
-    { id: '3', nameKey: 'prod_mug', price: 14.99, imageSrc: '/images/products/ceramic-mug.png', category: 'Drinkware' },
-    { id: '4', nameKey: 'prod_tote', price: 19.99, imageSrc: '/images/products/eco-tote.png', category: 'Bags' },
+    { id: '1', slug: 'classic-heavy-cotton-tshirt', nameKey: 'prod_t_shirt', price: 29.99, imageSrc: '/images/products/classic-tshirt.png', category: 'T-Shirts' },
+    { id: '3', slug: 'custom-ceramic-mug', nameKey: 'prod_mug', price: 14.99, imageSrc: '/images/products/ceramic-mug.png', category: 'Drinkware' },
+    { id: '4', slug: 'eco-friendly-tote-bag', nameKey: 'prod_tote', price: 19.99, imageSrc: '/images/products/eco-tote.png', category: 'Bags' },
 ];
 
 export default function FavoritesPage() {
@@ -62,6 +62,7 @@ export default function FavoritesPage() {
                     <ProductCard
                         key={product.id}
                         id={product.id}
+                        slug={product.slug}
                         nameKey={product.nameKey}
                         price={product.price}
                         imageSrc={product.imageSrc}
