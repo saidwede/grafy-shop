@@ -2,8 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Instagram, Facebook, X, Phone, Mail } from 'lucide-react';
+import { Instagram, Facebook, Phone, Mail } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { BsTwitterX } from "react-icons/bs";
 
 const Footer = () => {
     const { t } = useLanguage();
@@ -15,7 +16,7 @@ const Footer = () => {
                     {/* Brand & Socials */}
                     <div className="space-y-6">
                         <Link href="/" className="text-2xl font-black tracking-tighter">
-                            GRAFY.SHOP
+                            GrafyShop
                         </Link>
                         <p className="text-gray-400 text-sm max-w-xs">
                             {t('footer_description')}
@@ -28,7 +29,7 @@ const Footer = () => {
                                 <Facebook className="w-5 h-5" />
                             </a>
                             <a href="#" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors" aria-label="X">
-                                <X className="w-5 h-5" />
+                                <BsTwitterX className="w-5 h-5" />
                             </a>
                             <a href="#" className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors" aria-label="TikTok">
                                 <svg
@@ -81,7 +82,7 @@ const Footer = () => {
 
                 {/* Bottom Bar */}
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 text-xs">
-                    <p>© {new Date().getFullYear()} GRAFY.SHOP. {t('footer_rights')}</p>
+                    <p>© {new Date().getFullYear()} Grafy.Shop. {t('footer_rights')}</p>
                     <div className="flex gap-6">
                         <Link href="/privacy" className="hover:text-white transition-colors">{t('footer_privacy')}</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">{t('footer_terms')}</Link>

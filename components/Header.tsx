@@ -49,10 +49,30 @@ export default function Header() {
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const searchRef = useRef<HTMLDivElement>(null);
     const accountRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const controlHeader = () => {
+            if (typeof window !== 'undefined') {
+                if (window.scrollY > lastScrollY && window.scrollY > 100) {
+                    setIsVisible(false); // Scrolling down
+                } else {
+                    setIsVisible(true); // Scrolling up
+                }
+                setLastScrollY(window.scrollY);
+            }
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('scroll', controlHeader);
+            return () => window.removeEventListener('scroll', controlHeader);
+        }
+    }, [lastScrollY]);
 
     const toggleLanguage = () => {
         setLocale(locale === 'en' ? 'fr' : 'en');
@@ -101,7 +121,12 @@ export default function Header() {
         .slice(0, 6);
 
     return (
-        <header className="w-full bg-transparent relative z-100">
+        <motion.header
+            className="fixed top-0 left-0 right-0 w-full bg-white backdrop-blur-md z-[100]"
+            initial={{ y: 0 }}
+            animate={{ y: isVisible ? 0 : -100 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
             <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto px-4 md:px-10 h-20 md:h-24">
                 {/* Left: Mobile Burger & Logo Container */}
                 <div className="flex-1 flex items-center gap-4">
@@ -228,7 +253,7 @@ export default function Header() {
                         </button>
 
                         {/* Search Bar Overlay - Full width on mobile, centered content */}
-                        <div className={`fixed md:absolute inset-x-4 md:inset-x-auto md:right-0 top-4 md:top-1/2 md:-translate-y-1/2 transition-all duration-300 flex items-center bg-white border border-black/10 rounded-full shadow-lg z-300 ${isSearchOpen ? 'translate-y-0 opacity-100 px-4 py-2 md:w-[400px]' : '-translate-y-4 opacity-0 pointer-events-none md:w-10'}`}>
+                        <div className={`fixed md:absolute inset-x-4 md:inset-x-auto md:right-0 top-4 md:top-1/2 md:-translate-y-1/2 transition-all duration-300 flex items-center bg-white border border-black/10 rounded-full shadow-md shadow-neutral-100 z-300 ${isSearchOpen ? 'translate-y-0 opacity-100 px-4 py-2 md:w-[400px]' : '-translate-y-4 opacity-0 pointer-events-none md:w-10'}`}>
                             <Search size={18} className="text-gray-400 mr-2 shrink-0" />
                             <input
                                 ref={inputRef}
@@ -330,6 +355,6 @@ export default function Header() {
                     </div>
                 </div>
             </div>
-        </header>
+        </motion.header>
     );
 }

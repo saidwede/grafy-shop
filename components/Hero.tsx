@@ -2,67 +2,197 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ShoppingCart, Palette, ShieldCheck, Zap, Leaf } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+
+const PRODUCTS = [
+    { src: '/images/grafy-bag.png', alt: 'Grafy Bag' },
+    { src: '/images/grafy-bottle-green.png', alt: 'Grafy Bottle' },
+    { src: '/images/grafy-shirt.png', alt: 'Grafy Shirt' },
+    { src: '/images/grafy-note.png', alt: 'Grafy Notebook' },
+    { src: '/images/grafy-t-shirt-blue.png', alt: 'Grafy T-Shirt' },
+    { src: '/images/grafy-mug-blue.png', alt: 'Grafy Mug' },
+    { src: '/images/grafy-usb-blue.png', alt: 'Grafy USB' },
+];
 
 export default function Hero() {
     const { t } = useLanguage();
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const features = [
+        {
+            icon: Palette,
+            title: t('hero_feature_1_title'),
+            desc: t('hero_feature_1_desc')
+        },
+        {
+            icon: ShieldCheck,
+            title: t('hero_feature_2_title'),
+            desc: t('hero_feature_2_desc')
+        },
+        {
+            icon: Zap,
+            title: t('hero_feature_3_title'),
+            desc: t('hero_feature_3_desc')
+        },
+        // {
+        //     icon: Leaf,
+        //     title: t('hero_feature_4_title'),
+        //     desc: t('hero_feature_4_desc')
+        // }
+    ];
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % PRODUCTS.length);
+        }, 3000);
+        return () => clearInterval(timer);
+    }, []);
 
     return (
-        <section className="relative w-full min-h-[600px] flex items-center overflow-hidden bg-black rounded-3xl mt-4 mb-20">
-            {/* Background/Video Layer */}
-            <div className="absolute inset-0 z-0">
-                {/* Mockup as background/fallback */}
-                <Image
-                    src="/images/hero-mockup.png"
-                    alt="Product showcase background"
-                    fill
-                    className="object-cover opacity-60"
-                    priority
-                />
+        <section className="relative w-full min-h-[700px] flex items-center overflow-hidden bg-white rounded-3xl mt-12 mb-20 lg:py-16">
+            <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-4 items-center w-full py-12">
+                {/* Left: Text Content */}
+                <div className="space-y-8 text-left order-2 lg:order-1 lg:max-w-sm">
+                    <div className="space-y-6">
+                        <h1 className="text-5xl md:text-7xl font-black text-black leading-[1.05] tracking-tighter">
+                            {t('hero_main_title').split('.').map((part, i, arr) => (
+                                <span key={i} className="block">
+                                    {part}{i < arr.length - 1 ? '.' : ''}
+                                </span>
+                            ))}
+                        </h1>
+                        <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed">
+                            {t('hero_main_subtitle')}
+                        </p>
+                    </div>
 
-                {/* Video Overlay with screen blend mode for transparency */}
-                {/* User can replace 'src' with their actual rotating products video */}
-                <video
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-screen overflow-hidden"
-                    poster="/images/hero-mockup.png"
-                >
-                    <source src="/videos/hero-rotation.mp4" type="video/mp4" />
-                </video>
-
-                {/* Subtle radial gradients for depth */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent z-10" />
-            </div>
-
-            <div className="relative z-20 max-w-7xl mx-auto px-8 md:px-16 flex flex-col gap-8">
-                <div className="space-y-4 max-w-2xl">
-                    <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.1] tracking-tighter text-center">
-                        {t('hero_main_title').split('.').map((part, i, arr) => (
-                            <span key={i} className="block">
-                                {part}{i < arr.length - 1 ? '.' : ''}
-                            </span>
-                        ))}
-                    </h1>
-                    <p className="text-lg md:text-xl text-gray-300 max-w-md font-medium leading-relaxed text-center">
-                        {t('hero_main_subtitle')}
-                    </p>
+                    <div className="flex items-center gap-6 pt-4">
+                        <Link
+                            href="/shop"
+                            className="px-10 py-4.5 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-all transform hover:scale-105 shadow-2xl shadow-black/20"
+                        >
+                            {t('hero_main_cta')}
+                        </Link>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-6 justify-center">
-                    <Link
-                        href="/shop"
-                        className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-xl shadow-white/10"
-                    >
-                        {t('hero_main_cta')}
-                    </Link>
+                {/* Center: Mockup Animation */}
+                <div className="relative z-10 order-1 lg:order-2 flex justify-center perspective-1000">
+                    <div className="relative w-full aspect-[9/19.5] max-w-[320px] md:max-w-[340px]">
+                        {/* Phone Frame */}
+                        <Image
+                            src="/images/phone-mockup.png"
+                            alt="iPhone 15 Pro customization mockup"
+                            fill
+                            className="object-contain drop-shadow-2xl z-10"
+                            priority
+                        />
+
+                        {/* Internal Screen UI */}
+                        <div className="absolute inset-[5%] rounded-[2.5rem] overflow-hidden z-10 p-2 pt-6 flex flex-col gap-4 bg-white">
+                            {/* Header */}
+                            <div className="flex items-center justify-between pt-2">
+                                <button className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <ChevronLeft className="w-4 h-4 text-black" />
+                                </button>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">
+                                    {t('hero_mockup_customization')}
+                                </span>
+                                <button className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <ShoppingCart className="w-4 h-4 text-black" />
+                                </button>
+                            </div>
+
+                            {/* Central Product Card Backdrop */}
+                            <div className="flex-1 my-2 mx-1 bg-gray-50/50 rounded-[2.5rem] border border-gray-100 flex items-center justify-center relative overflow-hidden">
+                                <div className="absolute inset-0 bg-linear-to-b from-white/30 to-transparent" />
+                            </div>
+
+                            {/* Bottom Controls */}
+                            <div className="mt-auto space-y-5 pb-6 px-1">
+                                {/* Color Selection */}
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-bold text-gray-400 px-1 uppercase tracking-wider">
+                                        {t('hero_mockup_color')}
+                                    </p>
+                                    <div className="flex justify-between gap-2">
+                                        {['#000000', '#2563eb', '#f97316', '#ef4444', '#10b981'].map((color, i) => (
+                                            <div
+                                                key={color}
+                                                className={`w-10 h-10 rounded-full border-2 ${i === 1 ? 'border-black' : 'border-transparent'}`}
+                                                style={{ backgroundColor: color }}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Size Selection */}
+                                <div className="space-y-3">
+                                    <p className="text-[10px] font-bold text-gray-400 px-1 uppercase tracking-wider">
+                                        {t('hero_mockup_size')}
+                                    </p>
+                                    <div className="flex justify-between gap-2">
+                                        {['S', 'M', 'L', 'XL', 'XXL'].map((size, i) => (
+                                            <div
+                                                key={size}
+                                                className={`flex-1 aspect-square rounded-full flex items-center justify-center text-[12px] font-black border-2 transition-colors ${i === 1 ? 'border-black bg-black text-white' : 'border-gray-100 text-gray-500'}`}
+                                            >
+                                                {size}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Floating Animated Products */}
+                        <div className="absolute inset-0 -translate-y-[10%] flex items-center justify-center z-30 pointer-events-none">
+                            <div className="w-full h-full relative mb-12">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentIndex}
+                                        initial={{ opacity: 0, scale: 0.3, y: 30 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{
+                                            opacity: [1, 1, 0],
+                                            scale: [1, 2, 3],
+                                            y: [0, -10, -30]
+                                        }}
+                                        className="absolute inset-0 flex items-center justify-center"
+                                    >
+                                        <Image
+                                            src={PRODUCTS[currentIndex].src}
+                                            alt={PRODUCTS[currentIndex].alt}
+                                            width={320}
+                                            height={320}
+                                            className="object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.15)]"
+                                            priority
+                                        />
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Feature Highlights */}
+                <div className="order-3 space-y-16 lg:pl-12">
+                    {features.map((feature, i) => (
+                        <div key={i} className="flex flex-row-reverse items-start gap-5 group hover:translate-x-1 transition-transform">
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors shrink-0">
+                                <feature.icon className="w-7 h-7" />
+                            </div>
+                            <div className="space-y-1 pt-1">
+                                <h3 className="font-light text-black text-right text-xl tracking-tight leading-none">{feature.title}</h3>
+                                <p className="text-gray-500 text-sm font-medium text-right leading-tight">{feature.desc}</p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
-
-            {/* Subtle bottom fade to blend with next section */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent opacity-40 z-10" />
         </section>
     );
 }

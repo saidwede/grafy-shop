@@ -4,6 +4,7 @@ import CategoryCard from "../components/CategoryCard";
 import PromoBanner from "../components/PromoBanner";
 import Hero from "../components/Hero";
 import Steps from "../components/Steps";
+import FeaturedProducts from "../components/FeaturedProducts";
 import NewArrivals from "../components/NewArrivals";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -48,6 +49,8 @@ export default function Home() {
       </div>
 
       <Steps />
+
+      <FeaturedProducts />
 
       <NewArrivals />
 
