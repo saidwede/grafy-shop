@@ -100,6 +100,7 @@ export const viewport: Viewport = {
 
 import ConditionalLayout from "@/components/ConditionalLayout";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default async function RootLayout({
   children,
@@ -126,11 +127,13 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${playfair.variable} ${robotoMono.variable} ${montserrat.variable} ${poppins.variable} ${openSans.variable} ${lora.variable} ${raleway.variable} ${oswald.variable} ${merriweather.variable} antialiased`}
       >
-        <LanguageProvider initialLocale={initialLocale}>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider initialLocale={initialLocale}>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

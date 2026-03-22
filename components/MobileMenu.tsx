@@ -4,7 +4,8 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
-import { X, Languages, Home, ShoppingBag, Info, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { X, Languages, Home, ShoppingBag, Info, ChevronRight, User as UserIcon, LogOut } from 'lucide-react';
 
 const CATEGORIES = [
     { key: 'cat_t_shirts', image: '/images/categories/t-shirts.png', slug: 't-shirts' },
@@ -28,6 +29,7 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     const { t, locale, setLocale } = useLanguage();
+    const { user, logout } = useAuth();
 
     const menuVariants: Variants = {
         closed: {
@@ -130,7 +132,69 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                         </div>
                     </div>
 
-                    
+                    {/* Auth Section */}
+                    <div className="mt-8 px-6 pb-20">
+                        {user ? (
+                            <div className="space-y-6">
+                                <Link 
+                                    href="/account?tab=profile"
+                                    className="flex items-center gap-4 p-5 bg-gray-50 rounded-[32px] border border-black/5 shadow-sm active:scale-[0.98] transition-all"
+                                    onClick={onClose}
+                                >
+                                    <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shrink-0 border border-black/5 overflow-hidden shadow-sm">
+                                        {user.photoURL ? (
+                                            <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <UserIcon size={24} className="text-gray-300" />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col min-w-0">
+                                        <p className="text-[10px] font-black text-black uppercase tracking-widest shrink-0 mb-1">
+                                            {user.displayName || (locale === 'fr' ? 'Mon Compte' : 'My Account')}
+                                        </p>
+                                        <p className="text-xs font-bold text-gray-400 truncate tracking-tight">{user.email}</p>
+                                    </div>
+                                </Link>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <Link
+                                        href="/account"
+                                        onClick={onClose}
+                                        className="w-full flex items-center justify-between px-6 py-4 bg-white border border-black/10 text-black text-sm font-bold rounded-2xl hover:bg-gray-50 transition-colors"
+                                    >
+                                        {locale === 'fr' ? 'Mon Compte' : 'My Account'}
+                                        <ChevronRight size={18} className="text-gray-400" />
+                                    </Link>
+                                    <button
+                                        onClick={() => {
+                                            logout();
+                                            onClose();
+                                        }}
+                                        className="w-full flex items-center justify-between px-6 py-4 bg-black text-white text-sm font-bold rounded-2xl hover:bg-gray-800 transition-colors"
+                                    >
+                                        {locale === 'fr' ? 'Déconnexion' : 'Log Out'}
+                                        <LogOut size={18} className="text-gray-400" />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-3">
+                                <Link
+                                    href="/login"
+                                    onClick={onClose}
+                                    className="w-full py-4 bg-black text-white text-center text-sm font-bold rounded-2xl hover:bg-gray-800 transition-colors"
+                                >
+                                    {t('user_login')}
+                                </Link>
+                                <Link
+                                    href="/login"
+                                    onClick={onClose}
+                                    className="w-full py-4 bg-white text-black text-center text-sm font-bold rounded-2xl border border-black/10 hover:bg-gray-50 transition-colors"
+                                >
+                                    {t('user_signup')}
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

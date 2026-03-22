@@ -999,7 +999,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                     <div className="w-full h-full rounded-full border border-black/10" style={{ backgroundColor: selectedElement.fill }} />
                                                 </button>
                                                 {showElementColorPicker && createPortal(
-                                                    <div className="fixed bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 z-[100] w-[220px] animate-in fade-in zoom-in-95 duration-200"
+                                                    <div className="fixed bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 z-100 w-[220px] animate-in fade-in zoom-in-95 duration-200"
                                                         style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
                                                         data-dropdown-portal="true"
                                                     >
@@ -1079,7 +1079,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                     </button>
 
                                                     {showFontPicker && createPortal(
-                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-[100] w-52 animate-in fade-in zoom-in-95 duration-200"
+                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-52 animate-in fade-in zoom-in-95 duration-200"
                                                             style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
                                                             data-dropdown-portal="true"
                                                         >
@@ -1128,7 +1128,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                     </button>
 
                                                     {showWeightPicker && createPortal(
-                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-[100] w-32 animate-in fade-in zoom-in-95 duration-200"
+                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-32 animate-in fade-in zoom-in-95 duration-200"
                                                             style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
                                                             data-dropdown-portal="true"
                                                         >
@@ -1218,7 +1218,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                 <Maximize size={16} className="text-gray-600" />
                                             </button>
                                             {showPositionPicker && createPortal(
-                                                <div className="fixed bg-white rounded-2xl shadow-2xl p-2 border border-gray-100 z-[100] w-40 animate-in fade-in zoom-in-95 duration-200"
+                                                <div className="fixed bg-white rounded-2xl shadow-2xl p-2 border border-gray-100 z-100 w-40 animate-in fade-in zoom-in-95 duration-200"
                                                     style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
                                                     data-dropdown-portal="true"
                                                 >
@@ -2112,7 +2112,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
             {/* ══════════════════════ ADD COLOR MODAL ══════════════════════ */}
             {showAddColorModal && (
-                <div className="fixed inset-x-0 bottom-24 flex justify-center z-[100] px-6">
+                <div className="fixed inset-x-0 bottom-24 flex justify-center z-100 px-6">
                     <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -2209,7 +2209,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
             {/* ══════════════════════ EDIT COLOR MODAL ══════════════════════ */}
             {showEditColorModal && editingColorId && (
-                <div className="fixed inset-x-0 bottom-24 flex justify-center z-[100] px-6">
+                <div className="fixed inset-x-0 bottom-24 flex justify-center z-100 px-6">
                     <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -2310,7 +2310,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
             {/* ══════════════════════ ADD SIDE MODAL ══════════════════════ */}
             {showAddSideModal && (
-                <div className="fixed inset-x-0 bottom-24 flex justify-center z-[100] px-6">
+                <div className="fixed inset-x-0 bottom-24 flex justify-center z-100 px-6">
                     <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -2403,7 +2403,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
             {/* ══════════════════════ EDIT SIDE MODAL ══════════════════════ */}
             {showEditSideModal && editingSideId && (
-                <div className="fixed inset-x-0 bottom-24 flex justify-center z-[100] px-6">
+                <div className="fixed inset-x-0 bottom-24 flex justify-center z-100 px-6">
                     <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
@@ -2511,7 +2511,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
             {/* ══════════════════════ OFF ZONE DIALOG ══════════════════════ */}
             {offZoneElementId && (
-                <div className="fixed inset-x-0 bottom-24 flex justify-center z-[100] px-6">
+                <div className="fixed inset-x-0 bottom-24 flex justify-center z-100 px-6">
                     <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-100 p-4 w-full max-w-sm animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">

@@ -43,8 +43,12 @@ const CATEGORIES = [
     { key: 'cat_activewear', image: '/images/categories/activewear.png', slug: 'activewear' },
 ];
 
+import { useAuth } from '@/context/AuthContext';
+import { LogOut, Layout } from 'lucide-react';
+
 export default function Header() {
     const { locale, setLocale, t } = useLanguage();
+    const { user, logout } = useAuth();
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
@@ -326,9 +330,11 @@ export default function Header() {
                         </div>
                     </div>
 
-                    <Link href="/favorites" className="p-2 text-gray-700 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50">
-                        <Heart size={20} />
-                    </Link>
+                    {user && (
+                        <Link href="/favorites" className="p-2 text-gray-700 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50">
+                            <Heart size={20} />
+                        </Link>
+                    )}
                     <Link href="/cart" className="p-2 text-gray-700 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50">
                         <ShoppingBag size={20} />
                     </Link>
@@ -337,33 +343,81 @@ export default function Header() {
                     <div className="relative" ref={accountRef}>
                         <button
                             onClick={() => setIsAccountOpen(!isAccountOpen)}
-                            className={`p-2 text-gray-700 hover:text-gray-900 transition-all rounded-full hover:bg-gray-50 ${isAccountOpen ? 'bg-gray-100' : ''}`}
+                            className={`p-1.5 text-gray-700 hover:text-gray-900 transition-all rounded-full hover:bg-gray-50 border border-transparent ${isAccountOpen ? 'bg-gray-100 border-black/5' : ''}`}
                         >
-                            <User size={20} />
+                            {user?.photoURL ? (
+                                <div className="w-7 h-7 rounded-full overflow-hidden border border-black/5">
+                                    <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                </div>
+                            ) : (
+                                <div className="p-0.5"><User size={20} /></div>
+                            )}
                         </button>
-
+ 
                         {/* Dropdown Menu */}
                         {isAccountOpen && (
-                            <div className="absolute top-full right-0 mt-3 w-64 bg-white border border-black/10 rounded-2xl shadow-2xl overflow-hidden z-110 animate-in fade-in slide-in-from-top-2 duration-200">
-                                <div className="p-6 text-center border-b border-black/5">
-                                    <h3 className="text-sm font-bold text-gray-900 mb-1">{t('user_welcome')}</h3>
-                                    <p className="text-xs text-gray-500">{t('hero_main_subtitle').split('.')[0]}.</p>
-                                </div>
+                            <div className="absolute top-full right-0 mt-3 w-64 bg-white border border-black/10 rounded-[28px] shadow-2xl overflow-hidden z-110 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <Link 
+                                    href="/account?tab=profile"
+                                    className="p-6 text-center border-b border-black/5 bg-gray-50/50 block hover:bg-gray-100/50 transition-colors group"
+                                    onClick={() => setIsAccountOpen(false)}
+                                >
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-black/5 overflow-hidden group-hover:scale-105 transition-transform">
+                                        {user?.photoURL ? (
+                                            <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <User size={20} className="text-gray-300" />
+                                        )}
+                                    </div>
+                                    <h3 className="text-sm font-black text-black tracking-tight mb-1">
+                                        {user?.displayName || (user ? (locale === 'fr' ? 'Mon Compte' : 'My Account') : t('user_welcome'))}
+                                    </h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate px-2">
+                                        {user ? user.email : t('hero_main_subtitle').split('.')[0] + '.'}
+                                    </p>
+                                </Link>
                                 <div className="p-3 flex flex-col gap-2">
-                                    <Link
-                                        href="/login"
-                                        className="w-full py-2.5 bg-black text-white text-center text-xs font-bold rounded-xl hover:bg-gray-800 transition-colors"
-                                        onClick={() => setIsAccountOpen(false)}
-                                    >
-                                        {t('user_login')}
-                                    </Link>
-                                    <Link
-                                        href="/register"
-                                        className="w-full py-2.5 bg-white text-black text-center text-xs font-bold rounded-xl border border-black/10 hover:bg-gray-50 transition-colors"
-                                        onClick={() => setIsAccountOpen(false)}
-                                    >
-                                        {t('user_signup')}
-                                    </Link>
+                                    {user ? (
+                                        <>
+                                            <Link
+                                                href="/account?tab=orders"
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-black text-xs font-bold rounded-xl hover:bg-gray-100 transition-colors"
+                                                onClick={() => setIsAccountOpen(false)}
+                                            >
+                                                {locale === 'fr' ? 'Mes Commandes' : 'My Orders'}
+                                                <Layout size={14} className="text-gray-400" />
+                                            </Link>
+                                            <button
+                                                onClick={() => {
+                                                    logout();
+                                                    setIsAccountOpen(false);
+                                                }}
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-black text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-colors"
+                                            >
+                                                {locale === 'fr' ? 'Déconnexion' : 'Log Out'}
+                                                <LogOut size={14} className="text-gray-400" />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Link
+                                                href="/login"
+                                                className="w-full py-2.5 bg-black text-white text-center text-xs font-bold rounded-xl hover:bg-gray-800 transition-colors"
+                                                onClick={() => setIsAccountOpen(false)}
+                                            >
+                                                {t('user_login')}
+                                            </Link>
+                                            <Link
+                                                href="/login"
+                                                className="w-full py-2.5 bg-white text-black text-center text-xs font-bold rounded-xl border border-black/10 hover:bg-gray-50 transition-colors"
+                                                onClick={() => {
+                                                    setIsAccountOpen(false);
+                                                }}
+                                            >
+                                                {t('user_signup')}
+                                            </Link>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )}
