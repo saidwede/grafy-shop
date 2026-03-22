@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingCart, User, Heart, Search, ChevronDown, Languages, X as CloseIcon, ArrowRight } from 'lucide-react';
+import { ShoppingBag, User, Heart, Search, ChevronDown, Languages, X as CloseIcon, ArrowRight } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { useState, useRef, useEffect } from 'react';
@@ -59,6 +59,10 @@ export default function Header() {
     useEffect(() => {
         const controlHeader = () => {
             if (typeof window !== 'undefined') {
+                if (isMobileMenuOpen) {
+                    setIsVisible(true);
+                    return;
+                }
                 if (window.scrollY > lastScrollY && window.scrollY > 100) {
                     setIsVisible(false); // Scrolling down
                 } else {
@@ -72,7 +76,19 @@ export default function Header() {
             window.addEventListener('scroll', controlHeader);
             return () => window.removeEventListener('scroll', controlHeader);
         }
-    }, [lastScrollY]);
+    }, [lastScrollY, isMobileMenuOpen]);
+
+    // Body scroll lock
+    useEffect(() => {
+        if (isMobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isMobileMenuOpen]);
 
     const toggleLanguage = () => {
         setLocale(locale === 'en' ? 'fr' : 'en');
@@ -122,12 +138,12 @@ export default function Header() {
 
     return (
         <motion.header
-            className="fixed top-0 left-0 right-0 w-full bg-white backdrop-blur-md z-[100]"
+            className="fixed top-0 left-0 right-0 w-full bg-white backdrop-blur-md z-100"
             initial={{ y: 0 }}
             animate={{ y: isVisible ? 0 : -100 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-            <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto px-4 md:px-10 h-20 md:h-24">
+            <div className="flex items-center justify-between w-full max-w-screen-2xl mx-auto px-4 md:px-10 py-3 md:py-0 md:h-24">
                 {/* Left: Mobile Burger & Logo Container */}
                 <div className="flex-1 flex items-center gap-4">
                     {/* Burger Menu Button (Mobile Only) */}
@@ -138,16 +154,16 @@ export default function Header() {
                         >
                             <div className="flex flex-col gap-1.5 items-start">
                                 <motion.span
-                                    animate={isMobileMenuOpen ? { rotate: 45, y: 8, width: 32 } : { rotate: 0, y: 0, width: 32 }}
-                                    className="h-0.5 bg-black rounded-full"
+                                    animate={isMobileMenuOpen ? { rotate: 45, y: 8, width: 22 } : { rotate: 0, y: 0, width: 22 }}
+                                    className="h-[2px] bg-black rounded-[2px]"
                                 />
                                 <motion.span
-                                    animate={isMobileMenuOpen ? { opacity: 0, width: 0 } : { opacity: 1, width: 24 }}
-                                    className="h-0.5 bg-black rounded-full"
+                                    animate={isMobileMenuOpen ? { opacity: 0, width: 0 } : { opacity: 1, width: 18 }}
+                                    className="h-[2px] bg-black rounded-[2px]"
                                 />
                                 <motion.span
-                                    animate={isMobileMenuOpen ? { rotate: -45, y: -8, width: 32 } : { rotate: 0, y: 0, width: 16 }}
-                                    className="h-0.5 bg-black rounded-full"
+                                    animate={isMobileMenuOpen ? { rotate: -45, y: -8, width: 22 } : { rotate: 0, y: 0, width: 10 }}
+                                    className="h-[2px] bg-black rounded-[2px]"
                                 />
                             </div>
                         </button>
@@ -177,8 +193,7 @@ export default function Header() {
                             onMouseEnter={() => setIsCatDropdownOpen(true)}
                             onMouseLeave={() => setIsCatDropdownOpen(false)}
                         >
-                            <Link
-                                href="/categories"
+                            <Link href={""}
                                 className={`text-sm font-medium transition-colors flex items-center gap-1 ${isCatDropdownOpen ? 'text-black' : 'text-gray-700 hover:text-gray-900'}`}
                             >
                                 {t('nav_categories')}
@@ -189,10 +204,10 @@ export default function Header() {
                             <div className={`w-[700px] absolute top-full left-1/2 -translate-x-1/2 mt-0 pt-4 transition-all duration-300 ${isCatDropdownOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
                                 <div className="w-[700px] bg-white border border-black/10 rounded-3xl shadow-2xl p-8 overflow-hidden">
                                     <div className="mb-6 flex items-center justify-between border-b border-black/5 pb-4">
-                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
                                             {t('nav_categories')}
                                         </span>
-                                        <Link href="/shop" className="text-[10px] font-black uppercase tracking-widest text-black hover:opacity-60 transition-opacity">
+                                        <Link href="/shop" className="text-[10px] font-bold uppercase tracking-widest text-black hover:opacity-60 transition-opacity">
                                             {t('hero_cta')}
                                         </Link>
                                     </div>
@@ -204,7 +219,7 @@ export default function Header() {
                                                 className="flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all group"
                                                 onClick={() => setIsCatDropdownOpen(false)}
                                             >
-                                                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-50 shrink-0 border border-black/5">
+                                                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                                                     <Image
                                                         src={cat.image}
                                                         alt={t(cat.key)}
@@ -213,7 +228,7 @@ export default function Header() {
                                                         className="object-cover transition-transform duration-500 group-hover:scale-110"
                                                     />
                                                 </div>
-                                                <span className="text-xs font-bold text-gray-700 group-hover:text-black transition-colors leading-tight">
+                                                <span className="text-xs text-gray-700 group-hover:text-black transition-colors leading-tight">
                                                     {t(cat.key)}
                                                 </span>
                                             </Link>
@@ -232,7 +247,7 @@ export default function Header() {
                     {/* Compact Language Switch */}
                     <button
                         onClick={toggleLanguage}
-                        className="flex items-center gap-1.5 text-xs font-bold text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider group"
+                        className="cursor-pointer flex items-center gap-1.5 text-xs font-bold text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider group"
                     >
                         <Languages size={14} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
                         {locale}
@@ -315,7 +330,7 @@ export default function Header() {
                         <Heart size={20} />
                     </Link>
                     <Link href="/cart" className="p-2 text-gray-700 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-50">
-                        <ShoppingCart size={20} />
+                        <ShoppingBag size={20} />
                     </Link>
 
                     {/* User Account Dropdown */}

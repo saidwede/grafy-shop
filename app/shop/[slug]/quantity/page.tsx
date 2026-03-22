@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { MOCK_PRODUCTS } from '../../page';
+import { MOCK_PRODUCTS } from '@/constants/products';
 import ProductGallery from '@/components/ProductGallery';
 import { ShoppingCart, ArrowLeft, Info, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
@@ -73,7 +73,7 @@ export default function QuantitySelectionPage() {
                         <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-full mb-4">
                             {product.categoryKey}
                         </span>
-                        <h1 className="text-3xl md:text-5xl font-black text-black mb-4 tracking-tighter uppercase italic">
+                        <h1 className="text-3xl md:text-5xl font-black text-black mb-4 tracking-tighter uppercase ">
                             {t(product.nameKey)}
                         </h1>
                         <p className="text-2xl font-black text-black">
@@ -139,13 +139,13 @@ export default function QuantitySelectionPage() {
 
                         <div className="flex flex-col gap-4">
                             {!isMinOrderMet && (
-                                <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-50 px-4 py-2 rounded-lg border border-red-100 italic">
+                                <div className="flex items-center gap-2 text-red-500 text-[10px] font-black uppercase tracking-widest bg-red-50 px-4 py-2 rounded-lg border border-red-100 ">
                                     <AlertTriangle size={14} />
                                     {t('min_order_not_met').replace('{count}', product.minimumOrder.toString())}
                                 </div>
                             )}
                             {isMinOrderMet && (
-                                <div className="flex items-center gap-2 text-green-600 text-[10px] font-black uppercase tracking-widest bg-green-50 px-4 py-2 rounded-lg border border-green-100 italic">
+                                <div className="flex items-center gap-2 text-green-600 text-[10px] font-black uppercase tracking-widest bg-green-50 px-4 py-2 rounded-lg border border-green-100 ">
                                     <CheckCircle2 size={14} />
                                     Order requirement met
                                 </div>

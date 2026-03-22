@@ -23,11 +23,11 @@ export default function FavoritesPage() {
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
                     <Heart size={32} className="text-gray-300" />
                 </div>
-                <h1 className="text-3xl font-black uppercase tracking-tighter italic mb-4">{t('fav_empty')}</h1>
+                <h1 className="text-3xl font-black uppercase tracking-tighter mb-4">{t('fav_empty')}</h1>
                 <p className="text-gray-500 mb-8 max-w-xs text-center">{t('fav_description')}</p>
                 <Link
                     href="/shop"
-                    className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-black hover:opacity-60 transition-opacity"
+                    className="flex items-center gap-2 text-sm font-black uppercase text-black hover:opacity-60 transition-opacity"
                 >
                     <ArrowLeft size={16} />
                     {t('cart_continue_shopping')}
@@ -37,10 +37,10 @@ export default function FavoritesPage() {
     }
 
     return (
-        <main className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-12 md:py-24">
+        <main className="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-24 md:py-42">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
                 <div>
-                    <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic mb-4">
+                    <h1 className="text-5xl md:text-7xl font-bold text-black mb-8">
                         {t('fav_title')}
                     </h1>
                     <p className="text-gray-500 font-medium">
@@ -50,7 +50,7 @@ export default function FavoritesPage() {
 
                 <Link
                     href="/shop"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-800 transition-all shadow-xl shadow-black/10"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-[10px] font-black uppercase rounded-xl hover:bg-gray-800 transition-all shadow-xl shadow-black/10"
                 >
                     <ShoppingBag size={14} />
                     {t('cart_continue_shopping')}

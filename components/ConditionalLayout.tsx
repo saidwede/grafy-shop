@@ -28,13 +28,14 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
     }, [pathname]);
 
     // Define routes where Header and Footer should be hidden
-    const hideGlobalUI = pathname === "/login" || pathname === "/register";
+    const hideHeader = pathname === "/login" || pathname === "/register";
+    const hideFooter = pathname === "/login" || pathname === "/register" || pathname.startsWith("/customize");
 
     return (
         <>
-            {!hideGlobalUI && <Header />}
+            {!hideHeader && <Header />}
             {children}
-            {!hideGlobalUI && <Footer />}
+            {!hideFooter && <Footer />}
         </>
     );
 }

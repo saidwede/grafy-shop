@@ -13,165 +13,149 @@ export default function ContactPage() {
         setFormStatus('sending');
         setTimeout(() => {
             setFormStatus('success');
-            // Reset after some time if needed or handle navigation
         }, 1500);
     };
 
     return (
-        <main className="max-w-7xl mx-auto px-4 py-16 md:px-8 lg:px-12">
-            {/* Header Section */}
-            <div className="max-w-3xl mb-16">
-                <h1 className="text-4xl md:text-6xl font-black text-black mb-6 tracking-tighter uppercase italic">
-                    {t('contact_title')}
-                </h1>
-                <p className="text-gray-500 text-lg md:text-xl leading-relaxed">
-                    {t('contact_subtitle')}
-                </p>
+        <main className="min-h-screen">
+            {/* Page Header */}
+            <div className="max-w-7xl mx-auto px-4 pt-42 pb-0 md:px-8 lg:px-12">
+                <div className="max-w-xl">
+                    <h1 className="text-5xl md:text-7xl font-bold text-black mb-8">
+                        {t('contact_title')}
+                    </h1>
+                    <p className="text-lg text-gray-700 leading-relaxed mb-12">
+                        {t('contact_subtitle')}
+                    </p>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
-                {/* Left Side: Contact Info */}
-                <div className="flex flex-col gap-12">
-                    <div>
-                        <h2 className="text-sm font-black uppercase tracking-widest text-black mb-6 flex items-center gap-3">
-                            <span className="w-8 h-[2px] bg-black"></span>
-                            {t('contact_info_title')}
-                        </h2>
-                        <p className="text-gray-500 mb-10 text-sm font-bold leading-relaxed">
-                            {t('contact_info_desc')}
-                        </p>
-
-                        <div className="space-y-8">
-                            <div className="flex items-start gap-6 group">
-                                <div className="p-4 bg-gray-50 rounded-2xl border border-black/5 group-hover:bg-black group-hover:text-white transition-all transform group-hover:scale-110">
-                                    <Phone size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Call Us</p>
-                                    <p className="text-lg font-bold text-black">+1 (800) 123-4567</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-6 group">
-                                <div className="p-4 bg-gray-50 rounded-2xl border border-black/5 group-hover:bg-black group-hover:text-white transition-all transform group-hover:scale-110">
-                                    <Mail size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Email Support</p>
-                                    <p className="text-lg font-bold text-black font-mono">hello@grafyshop.com</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-6 group">
-                                <div className="p-4 bg-gray-50 rounded-2xl border border-black/5 group-hover:bg-black group-hover:text-white transition-all transform group-hover:scale-110">
-                                    <MapPin size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Our Studio</p>
-                                    <p className="text-lg font-bold text-black">789 Creative Blvd, Design District<br />Paris, 75001 France</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Trust / Features Grid */}
-                    <div className="grid grid-cols-2 gap-6 pt-12 border-t border-black/5">
-                        <div className="flex items-start gap-3">
-                            <Clock size={18} className="text-black shrink-0" />
+            {/* Content List */}
+            <div className="max-w-7xl mx-auto px-4 pb-24 md:px-8 lg:px-12">
+                <div className="border-t border-black/10 pt-16 md:pt-24">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
+                        {/* Left Side: Contact Info */}
+                        <div className="flex flex-col gap-16">
                             <div>
-                                <p className="text-xs font-black uppercase tracking-widest text-black mb-1">Rapid Response</p>
-                                <p className="text-[10px] text-gray-500 font-bold">Within 24 business hours</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <Globe size={18} className="text-black shrink-0" />
-                            <div>
-                                <p className="text-xs font-black uppercase tracking-widest text-black mb-1">Global Shipping</p>
-                                <p className="text-[10px] text-gray-500 font-bold">Serving 50+ countries</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Side: Contact Form */}
-                <div className="relative">
-                    {/* Background Decorative Element */}
-                    <div className="absolute -top-10 -right-10 w-64 h-64 bg-gray-100 rounded-full blur-3xl opacity-50 -z-10" />
-
-                    <div className="bg-white rounded-[40px] border border-black/5 p-8 md:p-12 shadow-2xl shadow-black/5 relative overflow-hidden group">
-                        {/* Status Overlay */}
-                        {formStatus === 'success' && (
-                            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500">
-                                <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mb-6 animate-bounce">
-                                    <Send size={32} />
-                                </div>
-                                <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-4">{t('contact_form_success')}</h3>
-                                <button
-                                    onClick={() => setFormStatus('idle')}
-                                    className="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
-                                >
-                                    Send another message
-                                </button>
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t('contact_form_name')}</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="Jane Doe"
-                                        className="w-full px-6 py-4 bg-gray-50 border border-black/5 rounded-2xl outline-none focus:border-black/20 focus:bg-white transition-all font-bold text-sm"
-                                    />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t('contact_form_email')}</label>
-                                    <input
-                                        required
-                                        type="email"
-                                        placeholder="jane@example.com"
-                                        className="w-full px-6 py-4 bg-gray-50 border border-black/5 rounded-2xl outline-none focus:border-black/20 focus:bg-white transition-all font-bold text-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t('contact_form_subject')}</label>
-                                <input
-                                    required
-                                    type="text"
-                                    placeholder="Project Inquiry"
-                                    className="w-full px-6 py-4 bg-gray-50 border border-black/5 rounded-2xl outline-none focus:border-black/20 focus:bg-white transition-all font-bold text-sm"
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t('contact_form_message')}</label>
-                                <textarea
-                                    required
-                                    rows={5}
-                                    placeholder="How can we help you today?"
-                                    className="w-full px-6 py-4 bg-gray-50 border border-black/5 rounded-2xl outline-none focus:border-black/20 focus:bg-white transition-all font-bold text-sm resize-none"
-                                />
-                            </div>
-
-                            <button
-                                disabled={formStatus === 'sending'}
-                                className="w-full py-5 bg-black text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gray-800 transition-all transform hover:scale-[1.01] shadow-xl disabled:opacity-50 disabled:cursor-not-allowed group/btn overflow-hidden relative"
-                            >
-                                <span className={`flex items-center gap-3 transition-transform duration-500 ${formStatus === 'sending' ? '-translate-y-20' : ''}`}>
-                                    <MessageSquare size={18} className="group-hover/btn:rotate-12 transition-transform" />
-                                    {t('contact_form_send')}
-                                </span>
-                                {formStatus === 'sending' && (
-                                    <div className="absolute inset-0 flex items-center justify-center animate-in slide-in-from-bottom-20 duration-500">
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-8">
+                                    {t('contact_info_title')}
+                                </h2>
+                                
+                                <div className="space-y-12">
+                                    <div className="flex items-start gap-8">
+                                        <div className="pt-1">
+                                            <Phone size={24} className="text-black" strokeWidth={1.5} />
+                                        </div>
+                                        <div className="border-b border-black/10 pb-8 flex-1">
+                                            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Call Us</p>
+                                            <p className="text-xl md:text-2xl font-bold text-black">+1 (800) 123-4567</p>
+                                        </div>
                                     </div>
+
+                                    <div className="flex items-start gap-8">
+                                        <div className="pt-1">
+                                            <Mail size={24} className="text-black" strokeWidth={1.5} />
+                                        </div>
+                                        <div className="border-b border-black/10 pb-8 flex-1">
+                                            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email Support</p>
+                                            <p className="text-xl md:text-2xl font-bold text-black">hello@grafyshop.com</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-8">
+                                        <div className="pt-1">
+                                            <MapPin size={24} className="text-black" strokeWidth={1.5} />
+                                        </div>
+                                        <div className="border-b border-black/10 pb-8 flex-1">
+                                            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Our Studio</p>
+                                            <p className="text-xl md:text-2xl font-bold text-black">789 Creative Blvd, Design District<br />Paris, 75001 France</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Trust Features */}
+                            <div className="grid grid-cols-2 gap-8">
+                                <div className="flex flex-col gap-4">
+                                    <Clock size={24} className="text-black" strokeWidth={1.5} />
+                                    <div>
+                                        <p className="text-sm font-bold text-black mb-1">Rapid Response</p>
+                                        <p className="text-sm text-gray-500">Within 24 business hours</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-4">
+                                    <Globe size={24} className="text-black" strokeWidth={1.5} />
+                                    <div>
+                                        <p className="text-sm font-bold text-black mb-1">Global Shipping</p>
+                                        <p className="text-sm text-gray-500">Serving 50+ countries</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Side: Contact Form */}
+                        <div className="relative">
+                            <div className="rounded-4xl text-left p-8 md:p-8 h-full">
+                                {/* Status Overlay */}
+                                {formStatus === 'success' ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-center animate-in fade-in duration-500 py-12">
+                                        <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mb-8">
+                                            <Send size={24} />
+                                        </div>
+                                        <h3 className="text-3xl font-bold mb-4">{t('contact_form_success')}</h3>
+                                        <button
+                                            onClick={() => setFormStatus('idle')}
+                                            className="text-sm font-bold text-gray-500 hover:text-black mt-4 underline underline-offset-4"
+                                        >
+                                            Send another message
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleSubmit} className="space-y-8 flex flex-col h-full justify-between">
+                                        <div className="space-y-8">
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder="Jane Doe"
+                                                className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400"
+                                            />
+                                            <input
+                                                    required
+                                                    type="email"
+                                                    placeholder="jane@example.com"
+                                                    className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400"
+                                            />
+                                            <input
+                                                required
+                                                type="text"
+                                                placeholder="Project Inquiry"
+                                                className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400"
+                                            />
+
+                                            <textarea
+                                                required
+                                                rows={5}
+                                                placeholder="How can we help you today?"
+                                                className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400 resize-none"
+                                            />
+                                        </div>
+
+                                        <button
+                                            disabled={formStatus === 'sending'}
+                                            className="mt-12 w-full py-5 bg-black text-white hover:bg-gray-900 transition-colors font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                        >
+                                            {formStatus === 'sending' ? (
+                                                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <>
+                                                    {t('contact_form_send')}
+                                                </>
+                                            )}
+                                        </button>
+                                    </form>
                                 )}
-                            </button>
-                        </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

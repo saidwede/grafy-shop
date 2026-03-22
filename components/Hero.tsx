@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ShoppingCart, Palette, ShieldCheck, Zap, Leaf } from 'lucide-react';
+import { ChevronLeft, ShoppingCart, Palette, ShieldCheck, Zap, Leaf, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 const PRODUCTS = [
@@ -25,17 +25,20 @@ export default function Hero() {
         {
             icon: Palette,
             title: t('hero_feature_1_title'),
-            desc: t('hero_feature_1_desc')
+            desc: t('hero_feature_1_desc'),
+            color: "text-indigo-600",
         },
         {
             icon: ShieldCheck,
             title: t('hero_feature_2_title'),
-            desc: t('hero_feature_2_desc')
+            desc: t('hero_feature_2_desc'),
+            color: "text-emerald-600",
         },
         {
             icon: Zap,
             title: t('hero_feature_3_title'),
-            desc: t('hero_feature_3_desc')
+            desc: t('hero_feature_3_desc'),
+            color: "text-amber-500",
         },
         // {
         //     icon: Leaf,
@@ -52,35 +55,42 @@ export default function Hero() {
     }, []);
 
     return (
-        <section className="relative w-full min-h-[700px] flex items-center overflow-hidden bg-white rounded-3xl mt-12 mb-20 lg:py-16">
-            <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-4 items-center w-full py-12">
+        <section className="relative w-full min-h-[700px] flex items-center overflow-hidden bg-white rounded-3xl md:mt-12 mb-20 lg:py-16">
+            <div className="relative z-20 max-w-7xl mx-auto px-6 md:px-0 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-4 items-center w-full py-12 md:py-12">
                 {/* Left: Text Content */}
-                <div className="space-y-8 text-left order-2 lg:order-1 lg:max-w-sm">
-                    <div className="space-y-6">
-                        <h1 className="text-5xl md:text-7xl font-black text-black leading-[1.05] tracking-tighter">
-                            {t('hero_main_title').split('.').map((part, i, arr) => (
-                                <span key={i} className="block">
-                                    {part}{i < arr.length - 1 ? '.' : ''}
-                                </span>
-                            ))}
+                <div className="space-y-2 text-left order-1 lg:order-1 lg:max-w-sm">
+                    <div className="space-y-2">
+                        <h1 className="text-5xl md:text-7xl text-center md:text-left font-black leading-[1.05] tracking-tighter">
+                            {t('hero_main_title').split('.').filter(p => p.trim()).map((part, i, arr) => {
+                                const isCustomize = i === 1; // Middle word
+                                return (
+                                    <span
+                                        key={i}
+                                        className={`block ${isCustomize ? 'text-black' : 'text-white [-webkit-text-stroke:1px_black]'}`}
+                                    >
+                                        {part.trim()}.
+                                    </span>
+                                );
+                            })}
                         </h1>
-                        <p className="text-lg md:text-xl text-gray-500 font-medium leading-relaxed">
+                        <p className="text-lg md:text-xl text-center md:text-left text-gray-500 font-medium leading-relaxed">
                             {t('hero_main_subtitle')}
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-6 pt-4">
+                    <div className="flex items-center justify-center md:justify-start gap-6 pt-4">
                         <Link
                             href="/shop"
-                            className="px-10 py-4.5 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-all transform hover:scale-105 shadow-2xl shadow-black/20"
+                            className="group px-10 py-4.5 bg-black text-white font-bold rounded-full transition-all transform flex items-center gap-2"
                         >
                             {t('hero_main_cta')}
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                     </div>
                 </div>
 
                 {/* Center: Mockup Animation */}
-                <div className="relative z-10 order-1 lg:order-2 flex justify-center perspective-1000">
+                <div className="relative z-10 order-2 lg:order-2 flex justify-center perspective-1000">
                     <div className="relative w-full aspect-[9/19.5] max-w-[320px] md:max-w-[340px]">
                         {/* Phone Frame */}
                         <Image
@@ -92,7 +102,7 @@ export default function Hero() {
                         />
 
                         {/* Internal Screen UI */}
-                        <div className="absolute inset-[5%] rounded-[2.5rem] overflow-hidden z-10 p-2 pt-6 flex flex-col gap-4 bg-white">
+                        <div className="absolute inset-[5%] rounded-[2.5rem] overflow-hidden z-10 p-2 pt-6 flex flex-col gap-4">
                             {/* Header */}
                             <div className="flex items-center justify-between pt-2">
                                 <button className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
@@ -149,13 +159,13 @@ export default function Hero() {
                         </div>
 
                         {/* Floating Animated Products */}
-                        <div className="absolute inset-0 -translate-y-[10%] flex items-center justify-center z-30 pointer-events-none">
+                        <div className="absolute inset-0 -translate-y-[5%] flex items-center justify-center z-30 pointer-events-none">
                             <div className="w-full h-full relative mb-12">
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={currentIndex}
-                                        initial={{ opacity: 0, scale: 0.3, y: 30 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        initial={{ opacity: 0, scale: 0.1, y: 30 }}
+                                        animate={{ opacity: 1, scale: 0.9, y: 0 }}
                                         exit={{
                                             opacity: [1, 1, 0],
                                             scale: [1, 2, 3],
@@ -166,8 +176,8 @@ export default function Hero() {
                                         <Image
                                             src={PRODUCTS[currentIndex].src}
                                             alt={PRODUCTS[currentIndex].alt}
-                                            width={320}
-                                            height={320}
+                                            width={400}
+                                            height={400}
                                             className="object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.15)]"
                                             priority
                                         />
@@ -181,13 +191,13 @@ export default function Hero() {
                 {/* Right: Feature Highlights */}
                 <div className="order-3 space-y-16 lg:pl-12">
                     {features.map((feature, i) => (
-                        <div key={i} className="flex flex-row-reverse items-start gap-5 group hover:translate-x-1 transition-transform">
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors shrink-0">
-                                <feature.icon className="w-7 h-7" />
+                        <div key={i} className="flex flex-col md:flex-row-reverse md:items-start items-center gap-5 group hover:translate-x-1 transition-transform">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors shrink-0`}>
+                                <feature.icon className={`w-7 h-7 ${feature.color} transition-colors`} />
                             </div>
                             <div className="space-y-1 pt-1">
-                                <h3 className="font-light text-black text-right text-xl tracking-tight leading-none">{feature.title}</h3>
-                                <p className="text-gray-500 text-sm font-medium text-right leading-tight">{feature.desc}</p>
+                                <h3 className="font-light text-black text-center md:text-right text-xl tracking-tight leading-none">{feature.title}</h3>
+                                <p className="text-gray-500 text-sm font-medium text-center md:text-right leading-tight">{feature.desc}</p>
                             </div>
                         </div>
                     ))}

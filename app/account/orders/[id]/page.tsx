@@ -60,7 +60,7 @@ export default function OrderDetailsPage() {
             <div className="max-w-4xl mx-auto">
                 <Link
                     href="/account"
-                    className="inline-flex items-center gap-2 font-black uppercase italic tracking-tighter text-gray-400 hover:text-black transition-colors mb-12"
+                    className="inline-flex items-center gap-2 font-black uppercase  tracking-tighter text-gray-400 hover:text-black transition-colors mb-12"
                 >
                     <ChevronLeft size={20} />
                     {t('order_back_to_list')}
@@ -68,7 +68,7 @@ export default function OrderDetailsPage() {
 
                 <div className="flex flex-wrap items-end justify-between gap-6 mb-12">
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase italic mb-2">
+                        <h1 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase  mb-2">
                             {t('order_details_title')}
                         </h1>
                         <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
@@ -127,7 +127,7 @@ export default function OrderDetailsPage() {
                     <div className="space-y-8">
                         {/* Summary Card */}
                         <div className="bg-black rounded-[32px] p-8 text-white shadow-2xl shadow-black/20">
-                            <h3 className="text-lg font-black uppercase italic tracking-tighter mb-6">Summary</h3>
+                            <h3 className="text-lg font-black uppercase  tracking-tighter mb-6">Summary</h3>
                             <div className="space-y-4 text-sm font-bold">
                                 <div className="flex justify-between text-white/60">
                                     <span>{t('order_summary_subtotal')}</span>
@@ -141,7 +141,7 @@ export default function OrderDetailsPage() {
                                     <span>{t('order_summary_tax')}</span>
                                     <span>{MOCK_ORDER_DATA.payment.tax}</span>
                                 </div>
-                                <div className="pt-4 border-t border-white/10 flex justify-between text-lg font-black uppercase italic">
+                                <div className="pt-4 border-t border-white/10 flex justify-between text-lg font-black uppercase ">
                                     <span>Total</span>
                                     <span>{MOCK_ORDER_DATA.payment.total}</span>
                                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function PromoBanner() {
@@ -24,9 +25,12 @@ export default function PromoBanner() {
                     {t('hero_subtitle')}
                 </p>
                 <div>
-                    <button className="px-8 py-3 bg-black border border-gray-200 rounded-full text-white font-medium hover:bg-gray-50 transition-colors">
+                    <Link
+                        href="/shop"
+                        className="px-8 py-3 bg-black border border-gray-200 rounded-full text-white font-medium transition-colors inline-block"
+                    >
                         {t('hero_cta')}
-                    </button>
+                    </Link>
                 </div>
             </div>
             <div className="w-full h-full rounded-2xl flex-1 flex items-center justify-center">

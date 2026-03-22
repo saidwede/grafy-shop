@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowLeft, Mail, Lock, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Lock } from 'lucide-react';
 
 export default function LoginPage() {
     const { t } = useLanguage();
@@ -48,7 +48,7 @@ export default function LoginPage() {
 
                 <div className="max-w-md w-full mx-auto">
                     <div className="mb-12">
-                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter italic mb-4 leading-none">
+                        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter  mb-4 leading-none">
                             {t('auth_login_title')}
                         </h1>
                         <p className="text-gray-500 font-medium">
@@ -60,37 +60,22 @@ export default function LoginPage() {
 
                         {/* Traditional Form */}
                         <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                            <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                                    {t('auth_email')}
-                                </label>
-                                <div className="relative group">
-                                    <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" />
-                                    <input
-                                        type="email"
-                                        placeholder="email@example.com"
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-sm font-medium"
-                                    />
-                                </div>
-                            </div>
+                            <input
+                                type="email"
+                                placeholder="email@example.com"
+                                className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400"
+                            />
 
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between items-end mb-1">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
-                                        {t('auth_password')}
-                                    </label>
-                                    <Link href="#" className="text-[10px] font-bold text-gray-400 hover:text-black transition-colors">
-                                        {t('auth_forgot_password')}
-                                    </Link>
-                                </div>
-                                <div className="relative group">
-                                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors" />
-                                    <input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-black/5 transition-all outline-none text-sm font-medium"
-                                    />
-                                </div>
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                className="w-full px-5 py-4 bg-white border border-gray-400 rounded-2xl outline-none focus:border-gray-600 transition-colors text-base text-gray-700 placeholder:text-gray-400"
+                            />
+
+                            <div className="flex justify-end">
+                                <Link href="#" className="text-xs font-bold text-gray-400 hover:text-black transition-colors">
+                                    {t('auth_forgot_password')}
+                                </Link>
                             </div>
 
                             <button className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-gray-800 transition-all active:scale-[0.98] mt-8 group">

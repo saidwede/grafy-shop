@@ -1,13 +1,15 @@
+import Link from 'next/link';
 import Image from 'next/image';
 
 interface CategoryCardProps {
     title: string;
     imageSrc: string;
+    slug: string;
 }
 
-export default function CategoryCard({ title, imageSrc }: CategoryCardProps) {
+export default function CategoryCard({ title, imageSrc, slug }: CategoryCardProps) {
     return (
-        <div className="flex flex-col gap-3 group cursor-pointer">
+        <Link href={`/shop?category=${slug}`} className="flex flex-col gap-3 group cursor-pointer">
             <div className="aspect-square bg-[#f5f5f7] rounded-xl overflow-hidden relative">
                 <Image
                     src={imageSrc}
@@ -18,6 +20,6 @@ export default function CategoryCard({ title, imageSrc }: CategoryCardProps) {
                 />
             </div>
             <h3 className="text-sm font-medium text-gray-900">{title}</h3>
-        </div>
+        </Link>
     );
 }

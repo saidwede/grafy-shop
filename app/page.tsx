@@ -12,18 +12,18 @@ export default function Home() {
   const { t } = useLanguage();
 
   const CATEGORIES = [
-    { title: t('cat_t_shirts'), image: "/images/categories/t-shirts.png" },
-    { title: t('cat_sweatshirts'), image: "/images/categories/sweatshirts.png" },
-    { title: t('cat_hats'), image: "/images/categories/hats.png" },
-    { title: t('cat_jackets_vests'), image: "/images/categories/jackets-vests.png" },
-    { title: t('cat_bags'), image: "/images/categories/bags.png" },
-    { title: t('cat_drinkware'), image: "/images/categories/drinkware.png" },
-    { title: t('cat_polos'), image: "/images/categories/polos-business-wear.png" },
-    { title: t('cat_workwear'), image: "/images/categories/workwear-uniforms.png" },
-    { title: t('cat_office'), image: "/images/categories/office-supplies.png" },
-    { title: t('cat_tech'), image: "/images/categories/technology.png" },
-    { title: t('cat_signage'), image: "/images/categories/trade-show-signage.png" },
-    { title: t('cat_activewear'), image: "/images/categories/activewear.png" },
+    { title: t('cat_t_shirts'), image: "/images/categories/t-shirts.png", slug: "t-shirts" },
+    { title: t('cat_sweatshirts'), image: "/images/categories/sweatshirts.png", slug: "sweatshirts" },
+    { title: t('cat_hats'), image: "/images/categories/hats.png", slug: "hats" },
+    { title: t('cat_jackets_vests'), image: "/images/categories/jackets-vests.png", slug: "jackets-vests" },
+    { title: t('cat_bags'), image: "/images/categories/bags.png", slug: "bags" },
+    { title: t('cat_drinkware'), image: "/images/categories/drinkware.png", slug: "drinkware" },
+    { title: t('cat_polos'), image: "/images/categories/polos-business-wear.png", slug: "polos" },
+    { title: t('cat_workwear'), image: "/images/categories/workwear-uniforms.png", slug: "workwear" },
+    { title: t('cat_office'), image: "/images/categories/office-supplies.png", slug: "office" },
+    { title: t('cat_tech'), image: "/images/categories/technology.png", slug: "tech" },
+    { title: t('cat_signage'), image: "/images/categories/trade-show-signage.png", slug: "signage" },
+    { title: t('cat_activewear'), image: "/images/categories/activewear.png", slug: "activewear" },
   ];
 
   return (
@@ -32,7 +32,7 @@ export default function Home() {
 
       <div id="categories" className="text-center mb-12 scroll-mt-32">
 
-        <h2 className="text-3xl md:text-4xl font-black text-black mb-4 tracking-tighter">
+        <h2 className="text-3xl md:text-5xl font-bold text-black mb-4 tracking-tighter">
           {t('cat_section_title')}
         </h2>
         <div className="w-16 h-1 bg-black mx-auto rounded-full" />
@@ -44,6 +44,7 @@ export default function Home() {
             key={category.title}
             title={category.title}
             imageSrc={category.image}
+            slug={category.slug}
           />
         ))}
       </div>

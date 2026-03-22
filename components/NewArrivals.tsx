@@ -2,13 +2,14 @@
 
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 
 const NewArrivals = () => {
     const { t } = useLanguage();
 
     return (
-        <section className="relative w-full overflow-hidden rounded-3xl mb-20 flex flex-col lg:flex-row min-h-[500px] border border-black/5 bg-white">
+        <section className="relative w-full overflow-hidden rounded-3xl my-20 flex flex-col lg:flex-row min-h-[500px] border border-black/5 bg-white">
             {/* Image Side (Left on Desktop) */}
             <div className="relative w-full lg:w-[60%] h-[400px] lg:h-auto bg-[#F5F5F7]">
                 <Image
@@ -28,9 +29,12 @@ const NewArrivals = () => {
                 <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-sm">
                     {t('arrivals_desc')}
                 </p>
-                <button className="px-10 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-xl shadow-white/5">
+                <Link
+                    href="/shop"
+                    className="px-10 py-4 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-all transform hover:scale-105 shadow-xl shadow-white/5"
+                >
                     {t('arrivals_cta')}
-                </button>
+                </Link>
             </div>
         </section>
     );

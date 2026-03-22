@@ -1,11 +1,25 @@
 "use client";
 
-import React from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import { X, Languages, ChevronRight, ShoppingCart, User, Heart } from 'lucide-react';
 import Image from 'next/image';
+import { X, Languages, Home, ShoppingBag, Info, ChevronRight } from 'lucide-react';
+
+const CATEGORIES = [
+    { key: 'cat_t_shirts', image: '/images/categories/t-shirts.png', slug: 't-shirts' },
+    { key: 'cat_sweatshirts', image: '/images/categories/sweatshirts.png', slug: 'sweatshirts' },
+    { key: 'cat_hats', image: '/images/categories/hats.png', slug: 'hats' },
+    { key: 'cat_jackets_vests', image: '/images/categories/jackets-vests.png', slug: 'jackets-vests' },
+    { key: 'cat_bags', image: '/images/categories/bags.png', slug: 'bags' },
+    { key: 'cat_drinkware', image: '/images/categories/drinkware.png', slug: 'drinkware' },
+    { key: 'cat_polos', image: '/images/categories/polos-business-wear.png', slug: 'polos' },
+    { key: 'cat_workwear', image: '/images/categories/workwear-uniforms.png', slug: 'workwear' },
+    { key: 'cat_office', image: '/images/categories/office-supplies.png', slug: 'office' },
+    { key: 'cat_tech', image: '/images/categories/technology.png', slug: 'tech' },
+    { key: 'cat_signage', image: '/images/categories/trade-show-signage.png', slug: 'signage' },
+    { key: 'cat_activewear', image: '/images/categories/activewear.png', slug: 'activewear' },
+];
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -52,124 +66,73 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
         })
     };
 
-    const navLinks = [
-        { href: "/", label: t('nav_home') },
-        { href: "/shop", label: t('nav_shop') },
-        { href: "/categories", label: t('nav_categories') },
-        { href: "/about", label: t('nav_about') },
-        { href: "/contact", label: t('footer_contact') },
-    ];
-
-    const quickActions = [
-        { href: "/account", icon: <User size={20} />, label: t('user_login') },
-        { href: "/favorites", icon: <Heart size={20} />, label: t('fav_title') },
-        { href: "/cart", icon: <ShoppingCart size={20} />, label: t('cart_title') },
-    ];
-
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* Backdrop Overlay */}
-                    <motion.div
-                        variants={overlayVariants}
-                        initial="closed"
-                        animate="open"
-                        exit="closed"
-                        onClick={onClose}
-                        className="fixed inset-0 bg-black/40 backdrop-blur-md z-[150] md:hidden"
-                    />
+        <div
+            className={`fixed inset-0 w-screen h-screen bg-white z-160 flex flex-col md:hidden transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} pt-10`}
+        >
+            <div className="flex flex-col h-full">
 
-                    {/* Menu Content */}
-                    <motion.div
-                        variants={menuVariants}
-                        initial="closed"
-                        animate="open"
-                        exit="closed"
-                        className="fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white z-[160] shadow-2xl flex flex-col md:hidden"
-                    >
-                        {/* Header within Menu */}
-                        <div className="p-8 flex items-center border-b border-black/5">
-                            <span className="text-xl font-bold tracking-tight text-gray-900">
-                                Grafy<span className="text-gray-500">Shop</span>
-                            </span>
-                        </div>
 
-                        {/* Navigation Links */}
-                        <nav className="flex-1 px-4 py-8 overflow-y-auto overflow-x-hidden">
-                            <div className="space-y-1">
-                                {navLinks.map((link, i) => (
-                                    <motion.div
-                                        key={link.href}
-                                        custom={i}
-                                        variants={linkVariants}
-                                    >
-                                        <Link
-                                            href={link.href}
-                                            onClick={onClose}
-                                            className="flex items-center justify-between px-6 py-4 rounded-2xl hover:bg-gray-50 transition-all group"
-                                        >
-                                            <span className="text-xl font-black uppercase italic tracking-tighter text-black">
-                                                {link.label}
-                                            </span>
-                                            <ChevronRight size={18} className="text-gray-300 group-hover:text-black transition-colors" />
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            {/* Divider with Category Style */}
-                            <div className="mx-6 my-8 border-t border-black/5 pb-8 pt-8">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-6 px-4">
-                                    Account & Orders
-                                </span>
-                                <div className="grid grid-cols-1 gap-2">
-                                    {quickActions.map((action, i) => (
-                                        <motion.div
-                                            key={action.href}
-                                            custom={navLinks.length + i}
-                                            variants={linkVariants}
-                                        >
-                                            <Link
-                                                href={action.href}
-                                                onClick={onClose}
-                                                className="flex items-center gap-4 px-6 py-3 rounded-xl hover:bg-gray-100 transition-colors"
-                                            >
-                                                <div className="p-2.5 bg-gray-50 rounded-lg text-black border border-black/5">
-                                                    {action.icon}
-                                                </div>
-                                                <span className="text-sm font-bold text-gray-700">{action.label}</span>
-                                            </Link>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        </nav>
-
-                        {/* Footer within Menu */}
-                        <div className="p-8 border-t border-black/5 bg-gray-50/50">
-                            <motion.button
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setLocale(locale === 'en' ? 'fr' : 'en')}
-                                className="w-full flex items-center justify-between px-6 py-4 bg-white rounded-2xl border border-black/5 shadow-sm hover:border-black/20 transition-all"
+                <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                    {/* Language Switch */}
+                    <div className="px-6 py-4 inline-block absolute right-0 top-0">
+                        <button
+                            onClick={() => setLocale(locale === 'en' ? 'fr' : 'en')}
+                            className="cursor-pointer flex items-center gap-1.5 text-xs font-bold text-gray-900 hover:text-gray-600 transition-colors uppercase tracking-wider group bg-gray-50 px-3 py-2 rounded-xl"
+                        >
+                            <Languages size={14} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                            {locale}
+                            <ChevronRight size={14} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
+                        </button>
+                    </div>
+                    {/* Navigation Links */}
+                    <nav className="flex flex-col gap-12 items-center py-10 px-6">
+                        {[
+                            { name: t('nav_home'), href: '/' },
+                            { name: t('nav_shop'), href: '/shop' },
+                            { name: t('nav_about'), href: '/about' },
+                        ].map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={onClose}
+                                className="text-2xl font-bold text-gray-900 text-center hover:text-gray-600 transition-colors"
                             >
-                                <div className="flex items-center gap-3">
-                                    <Languages size={18} className="text-gray-400" />
-                                    <span className="text-xs font-bold uppercase tracking-widest text-black">
-                                        {locale === 'en' ? 'Français' : 'English'}
+                                {link.name}
+                            </Link>
+                        ))}
+                    </nav>
+
+                    {/* Categories Horizontal Scroll */}
+                    <div className="py-4 px-4">
+                        <div className="flex gap-4 overflow-x-auto px-6 pb-2 no-scrollbar scroll-smooth snap-x">
+                            {CATEGORIES.map((cat) => (
+                                <Link
+                                    key={cat.key}
+                                    href={`/shop?category=${cat.key}`}
+                                    onClick={onClose}
+                                    className="flex flex-col items-center gap-2 shrink-0 snap-start"
+                                >
+                                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 transition-transform">
+                                        <Image
+                                            src={cat.image}
+                                            alt={t(cat.key)}
+                                            fill
+                                            unoptimized
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <span className="text-[10px] font-medium text-gray-600 w-20 text-center leading-tight">
+                                        {t(cat.key)}
                                     </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-300">
-                                        {locale === 'en' ? 'EN' : 'FR'}
-                                    </span>
-                                    <ChevronRight size={14} className="text-gray-300" />
-                                </div>
-                            </motion.button>
+                                </Link>
+                            ))}
                         </div>
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
+                    </div>
+
+                    
+                </div>
+            </div>
+        </div>
     );
 }

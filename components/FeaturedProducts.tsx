@@ -88,6 +88,11 @@ const FeaturedProducts = () => {
         ]
     ];
 
+    const allProducts = productSets.flat();
+
+    const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
+    const mobileScrollRef = React.useRef<HTMLDivElement>(null);
+
     const handleNext = () => {
         setActiveIndex((prev) => (prev + 1) % productSets.length);
     };
@@ -96,9 +101,20 @@ const FeaturedProducts = () => {
         setActiveIndex((prev) => (prev - 1 + productSets.length) % productSets.length);
     };
 
+    const handleMobileScroll = () => {
+        if (mobileScrollRef.current) {
+            const scrollLeft = mobileScrollRef.current.scrollLeft;
+            const itemWidth = mobileScrollRef.current.clientWidth * 0.75; // 75vw
+            const newIndex = Math.round(scrollLeft / (itemWidth + 16)); // 16 is gap
+            if (newIndex !== mobileActiveIndex) {
+                setMobileActiveIndex(newIndex);
+            }
+        }
+    };
+
     return (
-        <section className="py-20 px-4 md:px-0 bg-white">
-            <div className="max-w-7xl mx-auto">
+        <section className="py-20 bg-white">
+            <div className="max-w-7xl mx-auto px-4 md:px-0">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-5xl font-extrabold text-black mb-4 tracking-tight">
                         {t('featured_title')}
@@ -106,17 +122,17 @@ const FeaturedProducts = () => {
                     <div className="w-24 h-1 bg-black mx-auto rounded-full" />
                 </div>
 
-                <div className="relative group/section px-4 md:px-0">
-                    {/* Clipping Wrapper */}
-                    <div className="overflow-hidden rounded-[2rem]">
+                <div className="relative group/section">
+                    {/* Desktop View: Paginated Carousel */}
+                    <div className="hidden md:block overflow-hidden rounded-4xl">
                         <div
                             className="flex transition-transform duration-700 ease-[cubic-bezier(0.16, 1, 0.3, 1)]"
                             style={{ transform: `translateX(-${activeIndex * 100}%)` }}
                         >
                             {productSets.map((set, setIndex) => (
-                                <div key={setIndex} className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full flex-shrink-0">
-                                    {set.map((product, index) => (
-                                        <div key={product.id} className="flex flex-col h-full bg-[#f5f5f7] rounded-[2rem] p-8 transition-transform duration-500 hover:scale-[1.02] cursor-pointer relative group">
+                                <div key={setIndex} className="grid grid-cols-3 gap-6 w-full flex-shrink-0">
+                                    {set.map((product) => (
+                                        <div key={product.id} className="flex flex-col h-full bg-[#f5f5f7] rounded-4xl p-8 transition-transform duration-500 hover:scale-[1.02] cursor-pointer relative group">
                                             {/* Image Container */}
                                             <div className="flex-1 flex items-center justify-center min-h-[300px] mb-8">
                                                 <div className="relative w-full h-full aspect-square">
@@ -153,10 +169,51 @@ const FeaturedProducts = () => {
                         </div>
                     </div>
 
-                    {/* Navigation Arrows - Positioned outside the clipping wrapper but inside max-w-7xl if possible, or allowing overflow */}
+                    {/* Mobile View: Horizontal Snap Scroll */}
+                    <div
+                        ref={mobileScrollRef}
+                        onScroll={handleMobileScroll}
+                        className="md:hidden flex overflow-x-auto snap-x snap-mandatory gap-4 pb-8 scrollbar-hide -mx-4 px-4"
+                    >
+                        {allProducts.map((product) => (
+                            <div key={product.id} className="snap-center shrink-0 w-[75vw] flex flex-col bg-[#f5f5f7] rounded-4xl p-4 transition-transform duration-500 cursor-pointer relative group">
+                                {/* Image Container */}
+                                <div className="flex items-center justify-center min-h-[300px] mb-8">
+                                    <div className="relative w-full h-full aspect-square max-w-[240px]">
+                                        <Image
+                                            src={product.image}
+                                            alt={product.title}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Product Info */}
+                                <div className="text-center flex flex-col items-center">
+                                    {product.tag && (
+                                        <span className="text-[#bf4800] text-[12px] font-bold mb-2 uppercase tracking-wide">
+                                            {product.tag}
+                                        </span>
+                                    )}
+                                    <h3 className="text-[17px] font-bold text-gray-900 mb-2 leading-tight">
+                                        {product.title}
+                                    </h3>
+                                    <p className="text-gray-500 text-[14px] mb-6 leading-normal line-clamp-2">
+                                        {product.description}
+                                    </p>
+                                    <span className="text-[14px] font-semibold text-gray-900 mt-auto">
+                                        {product.price}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Navigation Arrows (Desktop Only) */}
                     <button
                         onClick={handlePrev}
-                        className="absolute top-1/2 left-0 md:-left-8 -translate-y-1/2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl border border-gray-100 opacity-0 group-hover/section:opacity-100 transition-all duration-300 z-30 hover:bg-gray-50 hover:scale-110 active:scale-95 disabled:hidden"
+                        className="hidden md:flex absolute top-1/2 -left-8 -translate-y-1/2 w-12 h-12 bg-white rounded-full items-center justify-center shadow-xl border border-gray-100 opacity-0 group-hover/section:opacity-100 transition-all duration-300 z-30 hover:bg-gray-50 hover:scale-110 active:scale-95 disabled:hidden"
                         aria-label="Previous Products"
                         disabled={activeIndex === 0}
                     >
@@ -164,7 +221,7 @@ const FeaturedProducts = () => {
                     </button>
                     <button
                         onClick={handleNext}
-                        className="absolute top-1/2 right-0 md:-right-8 -translate-y-1/2 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl border border-gray-100 opacity-0 group-hover/section:opacity-100 transition-all duration-300 z-30 hover:bg-gray-50 hover:scale-110 active:scale-95 disabled:hidden"
+                        className="hidden md:flex absolute top-1/2 -right-8 -translate-y-1/2 w-12 h-12 bg-white rounded-full items-center justify-center shadow-xl border border-gray-100 opacity-0 group-hover/section:opacity-100 transition-all duration-300 z-30 hover:bg-gray-50 hover:scale-110 active:scale-95 disabled:hidden"
                         aria-label="Next Products"
                         disabled={activeIndex === productSets.length - 1}
                     >
@@ -172,16 +229,30 @@ const FeaturedProducts = () => {
                     </button>
 
                     {/* Pagination Dots */}
-                    <div className="flex justify-center gap-3 mt-12">
-                        {productSets.map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setActiveIndex(index)}
-                                className={`w-2 h-2 rounded-full transition-all duration-300 ${activeIndex === index ? 'bg-gray-900 w-4' : 'bg-gray-300 hover:bg-gray-400'
-                                    }`}
-                                aria-label={`Go to slide ${index + 1}`}
-                            />
-                        ))}
+                    <div className="flex justify-center gap-3 mt-2 md:mt-12">
+                        {/* Mobile Dots */}
+                        <div className="flex md:hidden gap-2">
+                            {allProducts.map((_, index) => (
+                                <div
+                                    key={index}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${mobileActiveIndex === index ? 'bg-gray-900 w-3' : 'bg-gray-200'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Desktop Dots */}
+                        <div className="hidden md:flex gap-3">
+                            {productSets.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveIndex(index)}
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${activeIndex === index ? 'bg-gray-900 w-4' : 'bg-gray-300 hover:bg-gray-400'
+                                        }`}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -46,7 +46,7 @@ export default function AccountPage() {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-12">
-                    <h1 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase italic mb-4">
+                    <h1 className="text-4xl md:text-5xl font-black text-black tracking-tighter uppercase  mb-4">
                         {t('account_title')}
                     </h1>
                     <p className="text-gray-500 font-bold">Welcome back! Manage your orders and profile settings below.</p>
@@ -58,14 +58,14 @@ export default function AccountPage() {
                         <nav className="space-y-2">
                             <button
                                 onClick={() => setActiveTab('orders')}
-                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black uppercase italic tracking-tighter transition-all ${activeTab === 'orders' ? 'bg-black text-white shadow-xl shadow-black/10' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
+                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black uppercase  tracking-tighter transition-all ${activeTab === 'orders' ? 'bg-black text-white shadow-xl shadow-black/10' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
                             >
                                 <Package size={20} />
                                 {t('account_orders')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('profile')}
-                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black uppercase italic tracking-tighter transition-all ${activeTab === 'profile' ? 'bg-black text-white shadow-xl shadow-black/10' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
+                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black uppercase  tracking-tighter transition-all ${activeTab === 'profile' ? 'bg-black text-white shadow-xl shadow-black/10' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
                             >
                                 <User size={20} />
                                 {t('account_profile')}
@@ -113,7 +113,7 @@ export default function AccountPage() {
 
                                             <Link
                                                 href={`/account/orders/${order.id}`}
-                                                className="flex items-center gap-2 font-black uppercase italic tracking-tighter text-black group-hover:translate-x-1 transition-transform"
+                                                className="flex items-center gap-2 font-black uppercase  tracking-tighter text-black group-hover:translate-x-1 transition-transform"
                                             >
                                                 {t('order_view_details')}
                                                 <ChevronRight size={18} />
@@ -127,9 +127,9 @@ export default function AccountPage() {
                                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <User size={32} className="text-gray-300" />
                                 </div>
-                                <h3 className="text-2xl font-black text-black uppercase italic tracking-tighter mb-4">Profile Settings</h3>
+                                <h3 className="text-2xl font-black text-black uppercase  tracking-tighter mb-4">Profile Settings</h3>
                                 <p className="text-gray-500 font-bold mb-8">Securely manage your personal information and preferences.</p>
-                                <button className="px-8 py-4 bg-gray-50 text-gray-400 rounded-2xl font-black uppercase italic tracking-tighter cursor-not-allowed">
+                                <button className="px-8 py-4 bg-gray-50 text-gray-400 rounded-2xl font-black uppercase  tracking-tighter cursor-not-allowed">
                                     Editing Restricted (Demo Mode)
                                 </button>
                             </div>
