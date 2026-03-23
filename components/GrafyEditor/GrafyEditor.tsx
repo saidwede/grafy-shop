@@ -214,6 +214,10 @@ export default function GrafyEditor({
     const [isPreloading, setIsPreloading] = useState(true);
     const preloadedImagesRef = useRef<Record<string, HTMLImageElement>>({});
 
+    // ─── DESIGN FRAME DIMENSIONS ───
+    const [frameWidth, setFrameWidth] = useState(initialData?.frameWidth || 1000);
+    const [frameHeight, setFrameHeight] = useState(initialData?.frameHeight || 1000);
+
     // One-time preloading for ALL side/color variations
     useEffect(() => {
         let isMounted = true;
@@ -313,6 +317,8 @@ export default function GrafyEditor({
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [stageScale, setStageScale] = useState(1);
     const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+    const [hasCenteredInitial, setHasCenteredInitial] = useState(false);
+    const hasMovedRef = useRef<boolean>(false);
 
     // Product selection sheet state
     const [showProductSheet, setShowProductSheet] = useState(false);
@@ -325,6 +331,7 @@ export default function GrafyEditor({
     const [showProductSettingsSheet, setShowProductSettingsSheet] = useState(false);
     const [productColor, setProductColor] = useState(COLORS[1]); // Default to second color (usually white)
     const [showColorSheet, setShowColorSheet] = useState(false);
+    const [showAllRecent, setShowAllRecent] = useState(false);
 
     // Add color modal state
     const [showAddColorModal, setShowAddColorModal] = useState(false);
@@ -354,21 +361,50 @@ export default function GrafyEditor({
     // Desktop tool state
     const [desktopActiveTool, setDesktopActiveTool] = useState<Tool>('select');
 
-    // Recent images visibility
-    const [showAllRecent, setShowAllRecent] = useState(false);
+    // Previous side ID to guard synchronization
+    const prevSideIdRef = useRef(activeSideId);
 
-    // Initial centering of the design zone
-    const [hasCenteredInitial, setHasCenteredInitial] = useState(false);
+    // Initial centering of the design zone (FRAME-RELATIVE)
     useEffect(() => {
-        if (!hasCenteredInitial && stageDimensions.width > 0) {
+        // Only center if it's a NEW product (no initialSides)
+        const isNewProduct = !initialData?.sides && !initialData?.colors;
+        if (!hasCenteredInitial && isNewProduct) {
             setDesignZone(prev => ({
                 ...prev,
-                x: (stageDimensions.width - prev.width) / 2,
-                y: (stageDimensions.height - prev.height) / 2
+                x: (frameWidth - prev.width) / 2,
+                y: (frameHeight - prev.height) / 2
             }));
             setHasCenteredInitial(true);
+        } else if (!hasCenteredInitial && !isNewProduct) {
+            // For existing products, just mark as "centered" so we don't accidentally center later
+            setHasCenteredInitial(true);
         }
-    }, [stageDimensions, hasCenteredInitial, designZone.width, designZone.height]);
+    }, [frameWidth, frameHeight, hasCenteredInitial, initialData, designZone.width, designZone.height]);
+
+    // synchronization: keep 'sides' array updated with local design state
+    useEffect(() => {
+        if (!activeSideId) return;
+
+        // GUARD: If side just switched, don't sync back to 'sides' yet
+        // because elements/designZone might still be from the previous side
+        if (prevSideIdRef.current !== activeSideId) {
+            prevSideIdRef.current = activeSideId;
+            return;
+        }
+        
+        setSides(prevSides => prevSides.map(side => {
+            if (side.id === activeSideId) {
+                return {
+                    ...side,
+                    designZone: {
+                        ...designZone,
+                        elements: elements
+                    }
+                };
+            }
+            return side;
+        }));
+    }, [elements, designZone, activeSideId]);
 
     // Dynamic stage sizing
     useEffect(() => {
@@ -398,6 +434,9 @@ export default function GrafyEditor({
             if (initialData.productPrice) setProductPrice(initialData.productPrice.toString());
             if (initialData.mainImage) setMainImage(initialData.mainImage);
             else if (initialData.thumbnail) setMainImage(initialData.thumbnail); // Fallback for old previews
+            
+            if (initialData.frameWidth) setFrameWidth(initialData.frameWidth);
+            if (initialData.frameHeight) setFrameHeight(initialData.frameHeight);
             
             // Set elements/designZone for the active side
             const activeS = initialData.sides.find((s: any) => s.id === (initialData.activeSideId || initialData.sides[0].id));
@@ -511,7 +550,9 @@ export default function GrafyEditor({
                 activeSideId,
                 productName: productTitle || 'Untitled Product',
                 productPrice: productPrice || '0.00',
-                imageGallery: gallery
+                imageGallery: gallery,
+                frameWidth,
+                frameHeight
             };
             
             if (onSave) {
@@ -871,7 +912,6 @@ export default function GrafyEditor({
     // Pinch-to-zoom and pan for mobile
     const lastDist = useRef(0);
     const lastCenter = useRef<{ x: number, y: number } | null>(null);
-    const hasMovedRef = useRef<boolean>(false);
 
     const handleTouchMove = (e: any) => {
         if (e.evt.cancelable) e.evt.preventDefault();
@@ -1516,57 +1556,85 @@ export default function GrafyEditor({
                                             x={stagePos.x}
                                             y={stagePos.y}
                                         >
-                                            {/* Layer 1: Product Image */}
-                                            {productImg && (() => {
-                                                const stageW = stageDimensions.width;
-                                                const stageH = stageDimensions.height;
-                                                const ratio = Math.min(stageW / productImg.width, stageH / productImg.height);
-                                                const w = productImg.width * ratio;
-                                                const h = productImg.height * ratio;
-                                                return (
-                                                    <KonvaImage
-                                                        image={productImg}
-                                                        x={stageW / 2}
-                                                        y={stageH / 2}
-                                                        width={w}
-                                                        height={h}
-                                                        offsetX={w / 2}
-                                                        offsetY={h / 2}
-                                                        listening={false}
-                                                    />
+                                            {(() => {
+                                                const fitScale = Math.min(
+                                                    stageDimensions.width / frameWidth,
+                                                    stageDimensions.height / frameHeight
                                                 );
-                                            })()}
-
-                                            {/* Layer 2: Design Zone and elements */}
-                                            <EditZone
-                                                zoneProps={designZone}
-                                                isSelected={selectedId === designZone.id}
-                                                selectedId={selectedId}
-                                                onSelect={() => handleSelect(designZone.id)}
-                                                onChange={(newProps) => setDesignZone(newProps)}
-                                                hideLimits={hideLimits}
-                                            >
-                                                {elements.map((el, i) => {
-                                                    if (el.type === 'text') {
-                                                        return <EditText key={el.id} shapeProps={el} isSelected={el.id === selectedId}
-                                                            onSelect={() => handleSelect(el.id)}
-                                                            onChange={(newProps: any) => handleElementChange(el.id, newProps)}
-                                                            isEditingExternally={editingTextId === el.id}
-                                                            onEditEnd={() => setEditingTextId(null)} />;
-                                                    }
-                                                    if (el.type === 'image') {
-                                                        return <EditImage key={el.id} shapeProps={el} isSelected={el.id === selectedId}
-                                                            onSelect={() => handleSelect(el.id)}
-                                                            onChange={(newProps: any) => handleElementChange(el.id, newProps)} />;
-                                                    }
-                                                    if (el.type === 'svg') {
-                                                        return <EditSVG key={el.id} shapeProps={el} isSelected={el.id === selectedId}
-                                                            onSelect={() => handleSelect(el.id)}
-                                                            onChange={(newProps: any) => handleElementChange(el.id, newProps)} />;
-                                                    }
-                                                    return null;
-                                                })}
-                                            </EditZone>
+                                                
+                                                return (
+                                                    <Group
+                                                        x={stageDimensions.width / 2}
+                                                        y={stageDimensions.height / 2}
+                                                        scaleX={fitScale}
+                                                        scaleY={fitScale}
+                                                        offsetX={frameWidth / 2}
+                                                        offsetY={frameHeight / 2}
+                                                        clipX={0}
+                                                        clipY={0}
+                                                        clipWidth={frameWidth}
+                                                        clipHeight={frameHeight}
+                                                    >
+                                                        {/* Product Background - Fills the Design Frame while maintaining aspect ratio */}
+                                                        {productImg && (() => {
+                                                            const imgRatio = productImg.width / productImg.height;
+                                                            const frameRatio = frameWidth / frameHeight;
+                                                            
+                                                            let drawW, drawH;
+                                                            if (imgRatio > frameRatio) {
+                                                                drawW = frameWidth;
+                                                                drawH = frameWidth / imgRatio;
+                                                            } else {
+                                                                drawH = frameHeight;
+                                                                drawW = frameHeight * imgRatio;
+                                                            }
+                                                            
+                                                            return (
+                                                                <KonvaImage
+                                                                    image={productImg}
+                                                                    x={(frameWidth - drawW) / 2}
+                                                                    y={(frameHeight - drawH) / 2}
+                                                                    width={drawW}
+                                                                    height={drawH}
+                                                                    listening={false}
+                                                                />
+                                                            );
+                                                        })()}
+                                                        
+                                                        <EditZone
+                                                            zoneProps={designZone}
+                                                            isSelected={selectedId === designZone.id}
+                                                            selectedId={selectedId}
+                                                            onSelect={() => handleSelect(designZone.id)}
+                                                            onChange={(newProps) => setDesignZone(newProps)}
+                                                            hideLimits={hideLimits}
+                                                            mockupWidth={frameWidth}
+                                                            mockupHeight={frameHeight}
+                                                        >
+                                                            {elements.map((el) => {
+                                                                if (el.type === 'text') {
+                                                                    return <EditText key={el.id} shapeProps={el} isSelected={el.id === selectedId}
+                                                                        onSelect={() => handleSelect(el.id)}
+                                                                        onChange={(newProps: any) => handleElementChange(el.id, newProps)}
+                                                                        isEditingExternally={editingTextId === el.id}
+                                                                        onEditEnd={() => setEditingTextId(null)} />;
+                                                                }
+                                                                if (el.type === 'image') {
+                                                                    return <EditImage key={el.id} shapeProps={el} isSelected={el.id === selectedId}
+                                                                        onSelect={() => handleSelect(el.id)}
+                                                                        onChange={(newProps: any) => handleElementChange(el.id, newProps)} />;
+                                                                }
+                                                                if (el.type === 'svg') {
+                                                                    return <EditSVG key={el.id} shapeProps={el} isSelected={el.id === selectedId}
+                                                                        onSelect={() => handleSelect(el.id)}
+                                                                        onChange={(newProps: any) => handleElementChange(el.id, newProps)} />;
+                                                                }
+                                                                return null;
+                                                            })}
+                                                        </EditZone>
+                                                    </Group>
+                                                    )
+                                                })()}
                                         </Group>
                                     </Layer>
                                 </Stage>
@@ -2331,6 +2399,46 @@ export default function GrafyEditor({
                                         }
                                     }} />
                                 </label>
+                            </section>
+                            
+                            {/* CANVAS SETTINGS SECTION */}
+                            <section className="mt-4 pt-4 border-t border-gray-100 pb-10">
+                                <h3 className="text-xs font-bold text-gray-400 mb-4">{locale === 'fr' ? 'Dimensions du Design Frame' : 'Design Frame Dimensions'}</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">
+                                            {locale === 'fr' ? 'Largeur' : 'Width'}
+                                        </label>
+                                        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100">
+                                            <Maximize size={16} className="text-gray-400" />
+                                            <input 
+                                                type="number" 
+                                                value={frameWidth} 
+                                                onChange={(e) => setFrameWidth(Number(e.target.value))}
+                                                className="bg-transparent border-none outline-none text-sm font-bold w-full"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">
+                                            {locale === 'fr' ? 'Hauteur' : 'Height'}
+                                        </label>
+                                        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100">
+                                            <Maximize size={16} className="text-gray-400 rotate-90" />
+                                            <input 
+                                                type="number" 
+                                                value={frameHeight} 
+                                                onChange={(e) => setFrameHeight(Number(e.target.value))}
+                                                className="bg-transparent border-none outline-none text-sm font-bold w-full"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-3 leading-tight">
+                                    {locale === 'fr' 
+                                        ? 'Ces dimensions définissent l\'espace de travail virtuel. La zone de design et les éléments sont positionnés relativement à ce cadre.' 
+                                        : 'These dimensions define the virtual workspace. The design zone and elements are positioned relative to this frame.'}
+                                </p>
                             </section>
                         </div>
                     </div>

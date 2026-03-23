@@ -16,9 +16,21 @@ interface EditZoneProps {
     onChange: (newProps: any) => void;
     children: React.ReactNode;
     hideLimits?: boolean;
+    mockupWidth?: number;
+    mockupHeight?: number;
 }
 
-const EditZone: React.FC<EditZoneProps> = ({ zoneProps, isSelected, selectedId, onSelect, onChange, children, hideLimits }) => {
+const EditZone: React.FC<EditZoneProps> = ({
+    zoneProps,
+    isSelected,
+    selectedId,
+    onSelect,
+    onChange,
+    children,
+    hideLimits,
+    mockupWidth,
+    mockupHeight
+}) => {
     const shapeRef = useRef<Konva.Group>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const elementTrRef = useRef<Konva.Transformer>(null);
@@ -76,11 +88,14 @@ const EditZone: React.FC<EditZoneProps> = ({ zoneProps, isSelected, selectedId, 
                         const stage = node.getStage();
                         if (!stage) return;
 
+                        const mockupW = mockupWidth || stage.width();
+                        const mockupH = mockupHeight || stage.height();
+
                         const centerX = node.x() + zoneProps.width / 2;
                         const centerY = node.y() + zoneProps.height / 2;
 
-                        const stageCenterX = stage.width() / 2;
-                        const stageCenterY = stage.height() / 2;
+                        const stageCenterX = mockupW / 2;
+                        const stageCenterY = mockupH / 2;
 
                         let newX = node.x();
                         let newY = node.y();
