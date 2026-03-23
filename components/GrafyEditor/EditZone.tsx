@@ -112,6 +112,10 @@ const EditZone: React.FC<EditZoneProps> = ({
                             newGuides.push({ type: 'h', pos: stageCenterY });
                         }
 
+                        // Boundary Clamping
+                        newX = Math.max(0, Math.min(newX, mockupW - zoneProps.width));
+                        newY = Math.max(0, Math.min(newY, mockupH - zoneProps.height));
+
                         node.x(newX);
                         node.y(newY);
                     } else if (node.parent === shapeRef.current) {
