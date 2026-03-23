@@ -160,12 +160,12 @@ const ADD_TOOLS: { id: Tool; icon: React.ReactNode; labelFr: string; labelEn: st
     { id: 'shapes', icon: <Shapes size={26} strokeWidth={1.5} />, labelFr: 'Formes', labelEn: 'Shapes' },
 ];
 
-export default function GrafyEditor({ 
+export default function GrafyEditor({
     editMode = false,
     initialData = undefined,
     onSave = undefined,
     isSaving = false
-}: { 
+}: {
     editMode?: boolean;
     initialData?: any;
     onSave?: (data: any, thumbnail: string, mainImage?: string | null) => Promise<void>;
@@ -221,12 +221,12 @@ export default function GrafyEditor({
     // One-time preloading for ALL side/color variations
     useEffect(() => {
         let isMounted = true;
-        
+
         const initPreload = async () => {
             setIsPreloading(true);
             const urls = sides.flatMap(s => s.colors.map(c => c.imageSrc)).filter(Boolean);
             const uniqueUrls = Array.from(new Set(urls));
-            
+
             await Promise.all(uniqueUrls.map(url => {
                 if (preloadedImagesRef.current[url]) return Promise.resolve();
 
@@ -241,12 +241,12 @@ export default function GrafyEditor({
                     img.src = url;
                 });
             }));
-            
+
             if (isMounted) {
                 setIsPreloading(false);
             }
         };
-        
+
         initPreload();
         return () => { isMounted = false; };
     }, [initialData?.id, sides.length]); // Re-run if product ID or side structure changes
@@ -255,7 +255,7 @@ export default function GrafyEditor({
     const preloadMockupImages = async () => {
         const urls = sides.flatMap(s => s.colors.map(c => c.imageSrc)).filter(Boolean);
         const uniqueUrls = Array.from(new Set(urls));
-        
+
         await Promise.all(uniqueUrls.map(url => {
             return new Promise((resolve) => {
                 const img = new window.Image();
@@ -391,7 +391,7 @@ export default function GrafyEditor({
             prevSideIdRef.current = activeSideId;
             return;
         }
-        
+
         setSides(prevSides => prevSides.map(side => {
             if (side.id === activeSideId) {
                 return {
@@ -428,16 +428,16 @@ export default function GrafyEditor({
             setSides(initialData.sides);
             if (initialData.activeColorId) setActiveColorId(initialData.activeColorId);
             if (initialData.activeSideId) setActiveSideId(initialData.activeSideId);
-            
+
             // ─── LOAD MANUAL DETAILS ───
             if (initialData.productName) setProductTitle(initialData.productName);
             if (initialData.productPrice) setProductPrice(initialData.productPrice.toString());
             if (initialData.mainImage) setMainImage(initialData.mainImage);
             else if (initialData.thumbnail) setMainImage(initialData.thumbnail); // Fallback for old previews
-            
+
             if (initialData.frameWidth) setFrameWidth(initialData.frameWidth);
             if (initialData.frameHeight) setFrameHeight(initialData.frameHeight);
-            
+
             // Set elements/designZone for the active side
             const activeS = initialData.sides.find((s: any) => s.id === (initialData.activeSideId || initialData.sides[0].id));
             if (activeS) {
@@ -454,19 +454,19 @@ export default function GrafyEditor({
             const transformedSides: ProductSide[] = [];
             // ... (rest of the mapping logic)
             const sideIds = ['front', 'back']; // Common side IDs
-            
+
             sideIds.forEach(sideId => {
-                const colorsForSide: {id: string, name: string, hex: string, imageSrc: string}[] = [];
+                const colorsForSide: { id: string, name: string, hex: string, imageSrc: string }[] = [];
                 let designZoneForSide: DesignZone | null = null;
 
                 initialData.colors.forEach((c: any) => {
                     const side = c.sides.find((s: any) => s.id === sideId);
                     if (side) {
-                        colorsForSide.push({ 
-                            id: c.id, 
-                            name: c.name || c.id, 
-                            hex: c.hex || '#FFFFFF', 
-                            imageSrc: side.imageSrc 
+                        colorsForSide.push({
+                            id: c.id,
+                            name: c.name || c.id,
+                            hex: c.hex || '#FFFFFF',
+                            imageSrc: side.imageSrc
                         });
                         if (!designZoneForSide) {
                             designZoneForSide = {
@@ -492,7 +492,7 @@ export default function GrafyEditor({
                 setSides(transformedSides);
                 if (initialData.activeColorId) setActiveColorId(initialData.activeColorId);
                 if (initialData.activeSideId) setActiveSideId(initialData.activeSideId);
-                
+
                 const activeS = transformedSides.find(s => s.id === initialData.activeSideId) || transformedSides[0];
                 setElements(activeS.designZone.elements);
                 setDesignZone(activeS.designZone);
@@ -502,7 +502,7 @@ export default function GrafyEditor({
 
     const handleSave = async () => {
         if (!onSave || !stageRef.current) return;
-        
+
         setIsSavingInEditor(true);
         try {
             const gallery: Record<string, string[]> = {};
@@ -519,14 +519,14 @@ export default function GrafyEditor({
             for (const colorId of colorIds) {
                 gallery[colorId] = [];
                 handleSwitchColor(colorId);
-                await new Promise(resolve => setTimeout(resolve, 100)); 
-                
+                await new Promise(resolve => setTimeout(resolve, 100));
+
                 for (const side of sides) {
                     handleSwitchSide(side.id);
                     // Force a small wait for the design elements to re-render on the new side
                     await new Promise(resolve => setTimeout(resolve, 100));
-                    
-                    const sideScreenshot = stageRef.current.toDataURL({ 
+
+                    const sideScreenshot = stageRef.current.toDataURL({
                         pixelRatio: 2,
                         mimeType: 'image/png'
                     });
@@ -543,7 +543,7 @@ export default function GrafyEditor({
             // 1. The 2nd argument (thumbnail) is ALWAYS the fresh design snapshot.
             // 2. The 3rd argument is the mainImage (Base64 or URL).
             const canvasPreview = gallery[colorIds[0]][0];
-            
+
             const saveData = {
                 sides,
                 activeColorId,
@@ -554,7 +554,7 @@ export default function GrafyEditor({
                 frameWidth,
                 frameHeight
             };
-            
+
             if (onSave) {
                 await onSave(saveData, canvasPreview, mainImage);
             }
@@ -1561,7 +1561,7 @@ export default function GrafyEditor({
                                                     stageDimensions.width / frameWidth,
                                                     stageDimensions.height / frameHeight
                                                 );
-                                                
+
                                                 return (
                                                     <Group
                                                         x={stageDimensions.width / 2}
@@ -1579,7 +1579,7 @@ export default function GrafyEditor({
                                                         {productImg && (() => {
                                                             const imgRatio = productImg.width / productImg.height;
                                                             const frameRatio = frameWidth / frameHeight;
-                                                            
+
                                                             let drawW, drawH;
                                                             if (imgRatio > frameRatio) {
                                                                 drawW = frameWidth;
@@ -1588,7 +1588,7 @@ export default function GrafyEditor({
                                                                 drawH = frameHeight;
                                                                 drawW = frameHeight * imgRatio;
                                                             }
-                                                            
+
                                                             return (
                                                                 <KonvaImage
                                                                     image={productImg}
@@ -1600,7 +1600,7 @@ export default function GrafyEditor({
                                                                 />
                                                             );
                                                         })()}
-                                                        
+
                                                         <EditZone
                                                             zoneProps={designZone}
                                                             isSelected={selectedId === designZone.id}
@@ -1633,8 +1633,8 @@ export default function GrafyEditor({
                                                             })}
                                                         </EditZone>
                                                     </Group>
-                                                    )
-                                                })()}
+                                                )
+                                            })()}
                                         </Group>
                                     </Layer>
                                 </Stage>
@@ -1802,7 +1802,7 @@ export default function GrafyEditor({
             {showProductSheet && (
                 <div className="fixed inset-0 z-60 flex flex-col justify-end">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowProductSheet(false)} />
-                    <div className="relative bg-white rounded-t-[32px] h-[85vh] flex flex-col z-10 animate-in slide-in-from-bottom duration-300">
+                    <div className="relative bg-white rounded-t-[32px] h-[75vh] flex flex-col z-10 animate-in slide-in-from-bottom duration-300">
                         {/* Handle */}
                         <div className="flex justify-center p-3 shrink-0">
                             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
@@ -1894,7 +1894,7 @@ export default function GrafyEditor({
             {showColorSheet && (
                 <div className="fixed inset-0 z-60 flex flex-col justify-end">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowColorSheet(false)} />
-                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300">
+                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300 max-h-[75vh]">
                         {/* Handle */}
                         <div className="flex justify-center p-3 shrink-0">
                             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
@@ -1959,7 +1959,7 @@ export default function GrafyEditor({
             {showMoreSheet && (
                 <div className="fixed inset-0 z-60 flex flex-col justify-end">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowMoreSheet(false)} />
-                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300">
+                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300 max-h-[75vh]">
                         {/* Handle */}
                         <div className="flex justify-center p-3 shrink-0">
                             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
@@ -2059,7 +2059,7 @@ export default function GrafyEditor({
                                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3 ml-1">
                                     {locale === 'fr' ? 'Image Principale (Aperçu Custom)' : 'Main Image (Custom Preview)'}
                                 </label>
-                                <div 
+                                <div
                                     onClick={() => mainImageInputRef.current?.click()}
                                     className="aspect-video w-full relative bg-[#F5F5F7] border border-gray-100 rounded-[32px] overflow-hidden p-6 flex items-center justify-center cursor-pointer group hover:bg-gray-100 transition-all hover:border-blue-200"
                                 >
@@ -2087,10 +2087,10 @@ export default function GrafyEditor({
                                             </div>
                                         </div>
                                     )}
-                                    <input 
-                                        type="file" 
-                                        ref={mainImageInputRef} 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        ref={mainImageInputRef}
+                                        className="hidden"
                                         accept="image/*"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0];
@@ -2106,7 +2106,7 @@ export default function GrafyEditor({
                                         }}
                                     />
                                     {mainImage && (
-                                        <button 
+                                        <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 setMainImage(null);
@@ -2123,7 +2123,7 @@ export default function GrafyEditor({
                                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2 ml-1">
                                     {locale === 'fr' ? 'Nom du Produit' : 'Product Name'}
                                 </label>
-                                <input 
+                                <input
                                     type="text"
                                     value={productTitle}
                                     onChange={(e) => setProductTitle(e.target.value)}
@@ -2136,7 +2136,7 @@ export default function GrafyEditor({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">{locale === 'fr' ? 'Prix ($)' : 'Price ($)'}</label>
-                                        <input 
+                                        <input
                                             type="text"
                                             value={productPrice}
                                             onChange={(e) => setProductPrice(e.target.value)}
@@ -2156,17 +2156,17 @@ export default function GrafyEditor({
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3 ml-1">
                                         {locale === 'fr' ? 'Tailles disponibles' : 'Available Sizes'}
                                     </label>
-                                    
+
                                     <div className="flex gap-2 mb-4">
-                                        <input 
+                                        <input
                                             type="text"
                                             value={newSizeInput}
                                             onChange={(e) => setNewSizeInput(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' && newSizeInput.trim()) {
-                                                    setActiveProduct(prev => ({ 
-                                                        ...prev, 
-                                                        sizes: [...new Set([...prev.sizes, newSizeInput.trim()])] 
+                                                    setActiveProduct(prev => ({
+                                                        ...prev,
+                                                        sizes: [...new Set([...prev.sizes, newSizeInput.trim()])]
                                                     }));
                                                     setNewSizeInput('');
                                                 }
@@ -2177,9 +2177,9 @@ export default function GrafyEditor({
                                         <button
                                             onClick={() => {
                                                 if (newSizeInput.trim()) {
-                                                    setActiveProduct(prev => ({ 
-                                                        ...prev, 
-                                                        sizes: [...new Set([...prev.sizes, newSizeInput.trim()])] 
+                                                    setActiveProduct(prev => ({
+                                                        ...prev,
+                                                        sizes: [...new Set([...prev.sizes, newSizeInput.trim()])]
                                                     }));
                                                     setNewSizeInput('');
                                                 }
@@ -2194,7 +2194,7 @@ export default function GrafyEditor({
                                         {activeProduct.sizes.length > 0 ? activeProduct.sizes.map(size => (
                                             <div key={size} className="group flex items-center px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-700 hover:border-gray-400 transition-all">
                                                 {size}
-                                                <button 
+                                                <button
                                                     onClick={() => {
                                                         setActiveProduct(prev => ({
                                                             ...prev,
@@ -2218,7 +2218,7 @@ export default function GrafyEditor({
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3 ml-1">
                                         {locale === 'fr' ? 'Description' : 'Description'}
                                     </label>
-                                    <textarea 
+                                    <textarea
                                         value={activeProduct.descriptionKey ? (t(activeProduct.descriptionKey) === activeProduct.descriptionKey ? activeProduct.descriptionKey : t(activeProduct.descriptionKey)) : ''}
                                         onChange={(e) => setActiveProduct(prev => ({ ...prev, descriptionKey: e.target.value }))}
                                         rows={4}
@@ -2235,7 +2235,7 @@ export default function GrafyEditor({
             {showProductSettingsSheet && (
                 <div className="fixed inset-0 z-60 flex flex-col justify-end">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowProductSettingsSheet(false)} />
-                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300">
+                    <div className="relative bg-white rounded-t-[32px] flex flex-col z-10 animate-in slide-in-from-bottom duration-300 max-h-[75vh]">
                         {/* Handle */}
                         <div className="flex justify-center p-3 shrink-0">
                             <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
@@ -2345,7 +2345,7 @@ export default function GrafyEditor({
                             </section>
 
                             {/* ACTIVE SIDE IMAGE UPLOAD */}
-                            <section className="mt-2 pt-2 border-t border-gray-100">
+                            <section className="mt-2">
                                 <div className="flex items-center gap-2 mb-3">
                                     <label className="text-xs font-bold text-gray-400 block">
                                         {locale === 'fr' ? `Image pour : ${activeSide.nameFr}` : `Image for: ${activeSide.name}`}
@@ -2400,7 +2400,7 @@ export default function GrafyEditor({
                                     }} />
                                 </label>
                             </section>
-                            
+
                             {/* CANVAS SETTINGS SECTION */}
                             <section className="mt-4 pt-4 border-t border-gray-100 pb-10">
                                 <h3 className="text-xs font-bold text-gray-400 mb-4">{locale === 'fr' ? 'Dimensions du Design Frame' : 'Design Frame Dimensions'}</h3>
@@ -2411,9 +2411,9 @@ export default function GrafyEditor({
                                         </label>
                                         <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100">
                                             <Maximize size={16} className="text-gray-400" />
-                                            <input 
-                                                type="number" 
-                                                value={frameWidth} 
+                                            <input
+                                                type="number"
+                                                value={frameWidth}
                                                 onChange={(e) => setFrameWidth(Number(e.target.value))}
                                                 className="bg-transparent border-none outline-none text-sm font-bold w-full"
                                             />
@@ -2425,9 +2425,9 @@ export default function GrafyEditor({
                                         </label>
                                         <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100">
                                             <Maximize size={16} className="text-gray-400 rotate-90" />
-                                            <input 
-                                                type="number" 
-                                                value={frameHeight} 
+                                            <input
+                                                type="number"
+                                                value={frameHeight}
                                                 onChange={(e) => setFrameHeight(Number(e.target.value))}
                                                 className="bg-transparent border-none outline-none text-sm font-bold w-full"
                                             />
@@ -2435,8 +2435,8 @@ export default function GrafyEditor({
                                     </div>
                                 </div>
                                 <p className="text-[10px] text-gray-400 mt-3 leading-tight">
-                                    {locale === 'fr' 
-                                        ? 'Ces dimensions définissent l\'espace de travail virtuel. La zone de design et les éléments sont positionnés relativement à ce cadre.' 
+                                    {locale === 'fr'
+                                        ? 'Ces dimensions définissent l\'espace de travail virtuel. La zone de design et les éléments sont positionnés relativement à ce cadre.'
                                         : 'These dimensions define the virtual workspace. The design zone and elements are positioned relative to this frame.'}
                                 </p>
                             </section>
@@ -2630,9 +2630,9 @@ export default function GrafyEditor({
                                     if (editColorName && editColorHex) {
                                         setSides(prev => prev.map(s => ({
                                             ...s,
-                                            colors: s.colors.map(c => 
-                                                c.id === editingColorId 
-                                                    ? { ...c, name: editColorName, hex: editColorHex } 
+                                            colors: s.colors.map(c =>
+                                                c.id === editingColorId
+                                                    ? { ...c, name: editColorName, hex: editColorHex }
                                                     : c
                                             )
                                         })));
@@ -2718,13 +2718,13 @@ export default function GrafyEditor({
                                                 id,
                                                 name: newSideName,
                                                 nameFr: newSideNameFr,
-                                                designZone: { 
+                                                designZone: {
                                                     id: `zone-${id}`,
                                                     x: sourceSide.designZone.x,
                                                     y: sourceSide.designZone.y,
                                                     width: sourceSide.designZone.width,
                                                     height: sourceSide.designZone.height,
-                                                    elements: [] 
+                                                    elements: []
                                                 },
                                                 colors: sourceSide.colors.map(c => ({
                                                     ...c,
@@ -2825,9 +2825,9 @@ export default function GrafyEditor({
                             <button
                                 onClick={() => {
                                     if (editSideName && editSideNameFr) {
-                                        setSides(prev => prev.map(s => 
-                                            s.id === editingSideId 
-                                                ? { ...s, name: editSideName, nameFr: editSideNameFr } 
+                                        setSides(prev => prev.map(s =>
+                                            s.id === editingSideId
+                                                ? { ...s, name: editSideName, nameFr: editSideNameFr }
                                                 : s
                                         ));
                                         setShowEditSideModal(false);
@@ -2909,7 +2909,7 @@ export default function GrafyEditor({
                                 : (locale === 'fr' ? 'Génération du studio...' : 'Generating studio assets...')}
                         </h3>
                         <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest animate-pulse">
-                            {isPreloading 
+                            {isPreloading
                                 ? (locale === 'fr' ? 'Mise en cache des déclinaisons' : 'Caching product variations')
                                 : (locale === 'fr' ? 'Optimisation des aperçus PNG' : 'Optimizing PNG previews')}
                         </p>

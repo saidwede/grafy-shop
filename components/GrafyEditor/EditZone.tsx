@@ -160,7 +160,7 @@ const EditZone: React.FC<EditZoneProps> = ({
                     width={zoneProps.width}
                     height={zoneProps.height}
                     stroke={hideLimits ? 'transparent' : "#D1D5DB"}
-                    strokeWidth={1}
+                    strokeWidth={4}
                     dash={hideLimits ? [] : [5, 5]}
                     fill="transparent"
                     listening={true}
@@ -185,10 +185,56 @@ const EditZone: React.FC<EditZoneProps> = ({
                     borderDash={[5, 5]}
                     enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top-center', 'bottom-center', 'middle-left', 'middle-right']}
                     boundBoxFunc={(oldBox, newBox) => {
-                        if (Math.abs(newBox.width) < 50 || Math.abs(newBox.height) < 50) {
+                        const node = shapeRef.current;
+                        if (!node) return newBox;
+
+                        const mockupW = mockupWidth || 1000;
+                        const mockupH = mockupHeight || 1000;
+
+                        const parent = node.getParent();
+                        if (!parent) return newBox;
+
+                        const absTransform = parent.getAbsoluteTransform();
+                        const invTransform = absTransform.copy().invert();
+                        const absScale = parent.getAbsoluteScale();
+
+                        // 1. Convert to local coordinates
+                        const localPos = invTransform.point({ x: newBox.x, y: newBox.y });
+                        let localW = newBox.width / absScale.x;
+                        let localH = newBox.height / absScale.y;
+                        let localX = localPos.x;
+                        let localY = localPos.y;
+
+                        // 2. Clamp in local space
+                        if (localX < 0) {
+                            localW += localX;
+                            localX = 0;
+                        }
+                        if (localY < 0) {
+                            localH += localY;
+                            localY = 0;
+                        }
+                        if (localX + localW > mockupW) {
+                            localW = mockupW - localX;
+                        }
+                        if (localY + localH > mockupH) {
+                            localH = mockupH - localY;
+                        }
+
+                        // 3. Protect min size
+                        if (localW < 100 || localH < 100) {
                             return oldBox;
                         }
-                        return newBox;
+
+                        // 4. Convert back to stage coordinates
+                        const stagePos = absTransform.point({ x: localX, y: localY });
+                        return {
+                            ...newBox,
+                            x: stagePos.x,
+                            y: stagePos.y,
+                            width: localW * absScale.x,
+                            height: localH * absScale.y
+                        };
                     }}
                     onTransformEnd={() => {
                         const node = shapeRef.current;
@@ -241,7 +287,7 @@ const EditZone: React.FC<EditZoneProps> = ({
                             : [-5000, g.pos, 5000, g.pos]
                     }
                     stroke="#FF00FF"
-                    strokeWidth={1}
+                    strokeWidth={3}
                     dash={[4, 4]}
                     listening={false}
                 />
