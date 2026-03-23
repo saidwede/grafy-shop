@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 // Ensure a Firestore document exists for the user in their tenant
                 try {
                     const tenantId = auth.tenantId || 'default';
-                    const userRef = doc(db, 'tenants', tenantId, 'users', user.uid);
+                    const userRef = doc(db, 'GrafyShop', tenantId, 'users', user.uid);
                     const userSnap = await getDoc(userRef);
 
                     if (!userSnap.exists()) {

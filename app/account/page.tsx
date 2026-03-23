@@ -130,7 +130,7 @@ export default function AccountPage() {
             try {
                 // Upload to Firebase Storage
                 const tenantId = auth.tenantId || 'default';
-                const storageRef = ref(storage, `tenants/${tenantId}/profile-pictures/${user.uid}`);
+                const storageRef = ref(storage, `GrafyShop/${tenantId}/profile-pictures/${user.uid}`);
                 
                 // Upload Base64 string
                 const uploadResult = await uploadString(storageRef, croppedImage, 'data_url');
@@ -142,7 +142,7 @@ export default function AccountPage() {
                 });
 
                 // Update Firestore Metadata
-                await setDoc(doc(db, 'tenants', tenantId, 'users', user.uid), {
+                await setDoc(doc(db, 'GrafyShop', tenantId, 'users', user.uid), {
                     photoURL: downloadURL,
                     updatedAt: new Date().toISOString()
                 }, { merge: true });

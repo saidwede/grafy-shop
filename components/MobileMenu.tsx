@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { X, Languages, Home, ShoppingBag, Info, ChevronRight, User as UserIcon, LogOut } from 'lucide-react';
+import { X, Languages, ChevronRight, User as UserIcon, LogOut, LayoutGrid } from 'lucide-react';
 
 const CATEGORIES = [
     { key: 'cat_t_shirts', image: '/images/categories/t-shirts.png', slug: 't-shirts' },
@@ -157,12 +157,36 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                                 </Link>
                                 <div className="grid grid-cols-1 gap-3">
                                     <Link
-                                        href="/account"
+                                        href="/dashboard"
+                                        className="w-full flex items-center justify-between px-6 py-4 bg-white border border-black/5 rounded-2xl hover:bg-gray-50 transition-all active:scale-[0.98] group"
                                         onClick={onClose}
-                                        className="w-full flex items-center justify-between px-6 py-4 bg-white border border-black/10 text-black text-sm font-bold rounded-2xl hover:bg-gray-50 transition-colors"
                                     >
-                                        {locale === 'fr' ? 'Mon Compte' : 'My Account'}
-                                        <ChevronRight size={18} className="text-gray-400" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
+                                                <LayoutGrid size={20} />
+                                            </div>
+                                            <span className="font-black uppercase tracking-tight text-sm text-black">
+                                                {locale === 'fr' ? 'Tableau de bord' : 'Dashboard'}
+                                            </span>
+                                        </div>
+                                        <ChevronRight size={18} className="text-gray-300" />
+                                    </Link>
+
+                                    <Link 
+                                        href="/account?tab=orders"
+                                        className="w-full flex items-center justify-between px-6 py-4 bg-white border border-black/5 rounded-2xl hover:bg-gray-50 transition-all active:scale-[0.98] group"
+                                        onClick={onClose}
+                                    >  
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-black transition-colors">
+                                                <ChevronRight size={20} className="rotate-90 hidden" />
+                                                <UserIcon size={20} />
+                                            </div>
+                                            <span className="font-black uppercase tracking-tight text-sm text-black">
+                                                {locale === 'fr' ? 'Mes Commandes' : 'My Orders'}
+                                            </span>
+                                        </div>
+                                        <ChevronRight size={18} className="text-gray-300" />
                                     </Link>
                                     <button
                                         onClick={() => {

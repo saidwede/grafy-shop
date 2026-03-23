@@ -13,7 +13,7 @@ interface EditImageProps {
 const EditImage: React.FC<EditImageProps> = ({ shapeProps, isSelected, onSelect, onChange }) => {
   const shapeRef = useRef<Konva.Image>(null);
 
-  const [image] = useImage(shapeProps.src);
+  const [image] = useImage(shapeProps.src, 'anonymous');
 
 
 

@@ -58,7 +58,8 @@ import {
     AlignCenterHorizontal,
     FlipVertical,
     RotateCw,
-    Settings
+    Settings,
+    Loader2
 } from 'lucide-react';
 import { MOCK_PRODUCTS, CATEGORIES } from '@/constants/products';
 import Image from 'next/image';
@@ -77,16 +78,22 @@ interface ProductSide {
     id: string; // e.g. 'front', 'back'
     name: string;
     nameFr: string;
-    imageSrc: string;
-    designZone: DesignArea;
-    elements: any[];
+    designZone: DesignZone;
+    colors: {
+        id: string;
+        name: string;
+        hex: string;
+        imageSrc: string;
+    }[];
 }
 
-interface ProductColorVariation {
-    id: string; // e.g. 'white', 'black'
-    name: string;
-    hex: string;
-    sides: ProductSide[];
+interface DesignZone {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    elements: any[];
 }
 
 // Legacy SIDES constant removed in favor of dynamic variation state
@@ -153,86 +160,141 @@ const ADD_TOOLS: { id: Tool; icon: React.ReactNode; labelFr: string; labelEn: st
     { id: 'shapes', icon: <Shapes size={26} strokeWidth={1.5} />, labelFr: 'Formes', labelEn: 'Shapes' },
 ];
 
-export default function GrafyEditor({ editMode = false }: { editMode?: boolean }) {
+export default function GrafyEditor({ 
+    editMode = false,
+    initialData = undefined,
+    onSave = undefined,
+    isSaving = false
+}: { 
+    editMode?: boolean;
+    initialData?: any;
+    onSave?: (data: any, thumbnail: string, mainImage?: string | null) => Promise<void>;
+    isSaving?: boolean;
+}) {
     const { t, locale } = useLanguage();
-    const [showAddSheet, setShowAddSheet] = useState(false);
-
-    // ══════════════ PRODUCT VARIATION STATE ══════════════
-    const [colors, setColors] = useState<ProductColorVariation[]>([
+    const [showAddSheet, setShowAddSheet] = useState(false)    // ══════════════ PRODUCT STATE (NEW SIDE-CENTRIC MODEL) ══════════════
+    const [sides, setSides] = useState<ProductSide[]>(initialData?.sides || [
         {
-            id: 'white',
-            name: 'White',
-            hex: '#FFFFFF',
-            sides: [
-                {
-                    id: 'front',
-                    name: 'Front',
-                    nameFr: 'Face',
-                    imageSrc: '',
-                    designZone: {
-                        id: 'design-zone',
-                        x: 150,
-                        y: 150,
-                        width: 200,
-                        height: 200,
-                    },
-                    elements: []
-                }
+            id: 'front',
+            name: 'Front',
+            nameFr: 'Face',
+            designZone: {
+                id: 'design-zone',
+                x: 150,
+                y: 150,
+                width: 200,
+                height: 200,
+                elements: []
+            },
+            colors: [
+                { id: 'white', name: 'White', hex: '#FFFFFF', imageSrc: '' }
             ]
         }
     ]);
-    const [activeColorId, setActiveColorId] = useState('white');
-    const [activeSideId, setActiveSideId] = useState('front');
+    const [activeColorId, setActiveColorId] = useState(sides[0].colors[0].id);
+    const [activeSideId, setActiveSideId] = useState(sides[0].id);
 
-    // Current active data (synced with the colors state)
-    const activeColor = colors.find(c => c.id === activeColorId) || colors[0];
-    const activeSide = activeColor.sides.find(s => s.id === activeSideId) || activeColor.sides[0];
+    // Current active data
+    const activeSide = sides.find(s => s.id === activeSideId) || sides[0];
+    const activeColorImg = activeSide.colors.find(c => c.id === activeColorId) || activeSide.colors[0];
 
     // These states are kept for performance and compatibility with existing handlers
-    const [elements, setElements] = useState<any[]>(activeSide.elements);
+    const [elements, setElements] = useState<any[]>(activeSide.designZone.elements);
     const [designZone, setDesignZone] = useState<DesignArea>(activeSide.designZone);
     const [activeProduct, setActiveProduct] = useState(MOCK_PRODUCTS.find(p => p.slug === 'premium-pullover-hoodie') || MOCK_PRODUCTS[0]);
-    const [productImg] = useImage(activeSide.imageSrc);
+    const [productImg, productImgStatus] = useImage(activeColorImg?.imageSrc || '', 'anonymous');
 
-    // Sync active state back to the colors array
+    // ─── MANUAL DETAILS & CUSTOM PREVIEW ───
+    const [productTitle, setProductTitle] = useState(initialData?.productName || '');
+    const [productPrice, setProductPrice] = useState(initialData?.productPrice || '');
+    const [mainImage, setMainImage] = useState<string | null>(null);
+    const mainImageInputRef = useRef<HTMLInputElement>(null);
+    const [isSavingInEditor, setIsSavingInEditor] = useState(false);
+    const [hideLimits, setHideLimits] = useState(false);
+    const [isPreloading, setIsPreloading] = useState(true);
+    const preloadedImagesRef = useRef<Record<string, HTMLImageElement>>({});
+
+    // One-time preloading for ALL side/color variations
     useEffect(() => {
-        setColors(prev => prev.map(c => {
-            return {
-                ...c,
-                sides: c.sides.map(s => {
-                    if (s.id === activeSideId) {
-                        return {
-                            ...s,
-                            elements: c.id === activeColorId ? elements : s.elements,
-                            designZone: designZone
-                        };
-                    }
-                    return s;
-                })
-            };
+        let isMounted = true;
+        
+        const initPreload = async () => {
+            setIsPreloading(true);
+            const urls = sides.flatMap(s => s.colors.map(c => c.imageSrc)).filter(Boolean);
+            const uniqueUrls = Array.from(new Set(urls));
+            
+            await Promise.all(uniqueUrls.map(url => {
+                if (preloadedImagesRef.current[url]) return Promise.resolve();
+
+                return new Promise((resolve) => {
+                    const img = new window.Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        if (isMounted) preloadedImagesRef.current[url] = img;
+                        resolve(null);
+                    };
+                    img.onerror = resolve;
+                    img.src = url;
+                });
+            }));
+            
+            if (isMounted) {
+                setIsPreloading(false);
+            }
+        };
+        
+        initPreload();
+        return () => { isMounted = false; };
+    }, [initialData?.id, sides.length]); // Re-run if product ID or side structure changes
+
+    // Helper for per-save stability if needed (optional since cached)
+    const preloadMockupImages = async () => {
+        const urls = sides.flatMap(s => s.colors.map(c => c.imageSrc)).filter(Boolean);
+        const uniqueUrls = Array.from(new Set(urls));
+        
+        await Promise.all(uniqueUrls.map(url => {
+            return new Promise((resolve) => {
+                const img = new window.Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = url;
+            });
         }));
-    }, [elements, designZone, activeSideId, activeColorId]);
+    };
+
+    // Sync active state back to the sides array
+    useEffect(() => {
+        setSides(prev => prev.map(s => {
+            if (s.id === activeSideId) {
+                return {
+                    ...s,
+                    designZone: {
+                        ...s.designZone,
+                        elements: elements,
+                        x: designZone.x,
+                        y: designZone.y,
+                        width: designZone.width,
+                        height: designZone.height
+                    }
+                };
+            }
+            return s;
+        }));
+    }, [elements, designZone, activeSideId]);
 
     // Handle switching color/side
     const handleSwitchSide = (sideId: string) => {
-        // Save current first? Done by useEffect above.
-        const nextSide = activeColor.sides.find(s => s.id === sideId);
+        const nextSide = sides.find(s => s.id === sideId);
         if (nextSide) {
-            setElements(nextSide.elements);
+            setElements(nextSide.designZone.elements);
             setDesignZone(nextSide.designZone);
             setActiveSideId(sideId);
         }
     };
 
     const handleSwitchColor = (colorId: string) => {
-        const nextColor = colors.find(c => c.id === colorId);
-        if (nextColor) {
-            const nextSide = nextColor.sides.find(s => s.id === activeSideId) || nextColor.sides[0];
-            setElements(nextSide.elements);
-            setDesignZone(nextSide.designZone);
-            setActiveColorId(colorId);
-            setActiveSideId(nextSide.id);
-        }
+        setActiveColorId(colorId);
     };
     const [addTool, setAddTool] = useState<Tool | null>(null);
     const [selectedFont, setSelectedFont] = useState('Inter');
@@ -323,6 +385,143 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
+
+    // ══════════════ INITIAL DATA LOADING (NEW MODEL) ══════════════
+    useEffect(() => {
+        if (initialData && initialData.sides) {
+            setSides(initialData.sides);
+            if (initialData.activeColorId) setActiveColorId(initialData.activeColorId);
+            if (initialData.activeSideId) setActiveSideId(initialData.activeSideId);
+            
+            // ─── LOAD MANUAL DETAILS ───
+            if (initialData.productName) setProductTitle(initialData.productName);
+            if (initialData.productPrice) setProductPrice(initialData.productPrice.toString());
+            if (initialData.mainImage) setMainImage(initialData.mainImage);
+            else if (initialData.thumbnail) setMainImage(initialData.thumbnail); // Fallback for old previews
+            
+            // Set elements/designZone for the active side
+            const activeS = initialData.sides.find((s: any) => s.id === (initialData.activeSideId || initialData.sides[0].id));
+            if (activeS) {
+                setElements(activeS.designZone.elements || []);
+                setDesignZone(activeS.designZone);
+            }
+        } else if (initialData && initialData.colors) {
+            // ... (rest of backward compatibility for colors)
+            // Still check for top-level metadata even in legacy items
+            if (initialData.productName) setProductTitle(initialData.productName);
+            if (initialData.productPrice) setProductPrice(initialData.productPrice.toString());
+            if (initialData.thumbnail) setMainImage(initialData.thumbnail);
+
+            const transformedSides: ProductSide[] = [];
+            // ... (rest of the mapping logic)
+            const sideIds = ['front', 'back']; // Common side IDs
+            
+            sideIds.forEach(sideId => {
+                const colorsForSide: {id: string, name: string, hex: string, imageSrc: string}[] = [];
+                let designZoneForSide: DesignZone | null = null;
+
+                initialData.colors.forEach((c: any) => {
+                    const side = c.sides.find((s: any) => s.id === sideId);
+                    if (side) {
+                        colorsForSide.push({ 
+                            id: c.id, 
+                            name: c.name || c.id, 
+                            hex: c.hex || '#FFFFFF', 
+                            imageSrc: side.imageSrc 
+                        });
+                        if (!designZoneForSide) {
+                            designZoneForSide = {
+                                ...side.designZone,
+                                elements: side.elements || []
+                            };
+                        }
+                    }
+                });
+
+                if (designZoneForSide) {
+                    transformedSides.push({
+                        id: sideId,
+                        name: sideId.charAt(0).toUpperCase() + sideId.slice(1),
+                        nameFr: sideId === 'front' ? 'Face' : 'Dos',
+                        designZone: designZoneForSide,
+                        colors: colorsForSide
+                    });
+                }
+            });
+
+            if (transformedSides.length > 0) {
+                setSides(transformedSides);
+                if (initialData.activeColorId) setActiveColorId(initialData.activeColorId);
+                if (initialData.activeSideId) setActiveSideId(initialData.activeSideId);
+                
+                const activeS = transformedSides.find(s => s.id === initialData.activeSideId) || transformedSides[0];
+                setElements(activeS.designZone.elements);
+                setDesignZone(activeS.designZone);
+            }
+        }
+    }, [initialData]);
+
+    const handleSave = async () => {
+        if (!onSave || !stageRef.current) return;
+        
+        setIsSavingInEditor(true);
+        try {
+            const gallery: Record<string, string[]> = {};
+            const originalColorId = activeColorId;
+            const originalSideId = activeSideId;
+
+            // 2. Prep for clean snapshots
+            setHideLimits(true);
+            setSelectedId(null); // Remove selection boxes
+            await new Promise(resolve => setTimeout(resolve, 150)); // Wait for render
+
+            // ─── GENERATE FULL GALLERY (Color Matrix) ───
+            const colorIds = sides[0].colors.map(c => c.id);
+            for (const colorId of colorIds) {
+                gallery[colorId] = [];
+                handleSwitchColor(colorId);
+                await new Promise(resolve => setTimeout(resolve, 100)); 
+                
+                for (const side of sides) {
+                    handleSwitchSide(side.id);
+                    // Force a small wait for the design elements to re-render on the new side
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    const sideScreenshot = stageRef.current.toDataURL({ 
+                        pixelRatio: 2,
+                        mimeType: 'image/png'
+                    });
+                    gallery[colorId].push(sideScreenshot);
+                }
+            }
+
+            // Restore original view and UI limits
+            handleSwitchColor(originalColorId);
+            handleSwitchSide(originalSideId);
+            setHideLimits(false);
+
+            // Final Logic: 
+            // 1. The 2nd argument (thumbnail) is ALWAYS the fresh design snapshot.
+            // 2. The 3rd argument is the mainImage (Base64 or URL).
+            const canvasPreview = gallery[colorIds[0]][0];
+            
+            const saveData = {
+                sides,
+                activeColorId,
+                activeSideId,
+                productName: productTitle || 'Untitled Product',
+                productPrice: productPrice || '0.00',
+                imageGallery: gallery
+            };
+            
+            if (onSave) {
+                await onSave(saveData, canvasPreview, mainImage);
+            }
+        } finally {
+            setIsSavingInEditor(false);
+            setHideLimits(false);
+        }
+    };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const changeImageInputRef = useRef<HTMLInputElement>(null);
@@ -792,15 +991,15 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
     const sideLabel = locale === 'fr' ? activeSide.nameFr : activeSide.name;
 
     const prevSide = () => {
-        const currentIndex = activeColor.sides.findIndex(s => s.id === activeSideId);
-        const prevIndex = (currentIndex - 1 + activeColor.sides.length) % activeColor.sides.length;
-        handleSwitchSide(activeColor.sides[prevIndex].id);
+        const currentIndex = sides.findIndex(s => s.id === activeSideId);
+        const prevIndex = (currentIndex - 1 + sides.length) % sides.length;
+        handleSwitchSide(sides[prevIndex].id);
     };
 
     const nextSide = () => {
-        const currentIndex = activeColor.sides.findIndex(s => s.id === activeSideId);
-        const nextIndex = (currentIndex + 1) % activeColor.sides.length;
-        handleSwitchSide(activeColor.sides[nextIndex].id);
+        const currentIndex = sides.findIndex(s => s.id === activeSideId);
+        const nextIndex = (currentIndex + 1) % sides.length;
+        handleSwitchSide(sides[nextIndex].id);
     };
 
     const openAddTool = (tool: Tool) => {
@@ -960,9 +1159,9 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                     className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-white/80 text-sm font-medium"
                                 >
                                     <div className='inline-block p-px border border-neutral-400 rounded-full'>
-                                        <div className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: activeColor.hex }} />
+                                        <div className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: activeColorImg.hex }} />
                                     </div>
-                                    <span className="text-gray-700">{locale === 'fr' ? activeColor.name : activeColor.name}</span>
+                                    <span className="text-gray-700">{locale === 'fr' ? activeColorImg.name : activeColorImg.name}</span>
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
                                 </button>
                             </div>
@@ -970,14 +1169,30 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
 
                         {/* More / Order CTA (Right side) */}
                         <div className="flex items-center gap-2">
-                            <button className="hidden lg:flex items-center gap-2 px-5 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">
-                                {editMode ? t('editor_save_design') : t('editor_order_cta')}
-                            </button>
-                            <button
-                                onClick={() => setShowMoreSheet(true)}
-                                className="w-10 h-10 bg-white rounded-full shadow-sm border border-white/80 flex items-center justify-center hover:bg-black/10 transition-colors">
-                                <MoreHorizontal size={20} strokeWidth={1.5} />
-                            </button>
+                            {onSave && (
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="h-10 px-4 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-sm"
+                                >
+                                    {isSaving ? (
+                                        <Loader2 size={16} className="animate-spin text-gray-400" />
+                                    ) : (
+                                        <Save size={16} />
+                                    )}
+                                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
+                                        {locale === 'fr' ? 'Enregistrer' : 'Save'}
+                                    </span>
+                                </button>
+                            )}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowMoreSheet(true)}
+                                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-95 text-gray-600"
+                                >
+                                    <MoreHorizontal size={20} strokeWidth={1.5} />
+                                </button>
+                            </div>
                         </div>
                     </>
                 ) : (
@@ -1329,6 +1544,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                 selectedId={selectedId}
                                                 onSelect={() => handleSelect(designZone.id)}
                                                 onChange={(newProps) => setDesignZone(newProps)}
+                                                hideLimits={hideLimits}
                                             >
                                                 {elements.map((el, i) => {
                                                     if (el.type === 'text') {
@@ -1366,7 +1582,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                         <div className="flex items-center gap-1.5 flex-col">
                             {/* Dots */}
                             <div className="flex items-center gap-1.5">
-                                {activeColor.sides.map((side) => (
+                                {sides.map((side) => (
                                     <button
                                         key={side.id}
                                         onClick={() => handleSwitchSide(side.id)}
@@ -1627,7 +1843,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                         {/* Color Items Grid */}
                         <div className="px-6 py-4 flex-1 overflow-y-auto max-h-[60vh]">
                             <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
-                                {colors.map(color => (
+                                {sides[0].colors.map(color => (
                                     <button
                                         key={color.id}
                                         onClick={() => {
@@ -1637,8 +1853,8 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                         className={`group flex flex-col items-center gap-1 p-1 rounded-2xl border transition-all ${activeColorId === color.id ? 'border-black bg-gray-50' : 'border-transparent hover:border-gray-300 bg-white'}`}
                                     >
                                         <div className="aspect-square w-full relative rounded-2xl overflow-hidden bg-[#F5F5F7]">
-                                            {color.sides[0]?.imageSrc && <Image
-                                                src={color.sides[0]?.imageSrc}
+                                            {color.imageSrc && <Image
+                                                src={color.imageSrc}
                                                 alt={color.name}
                                                 fill
                                                 unoptimized
@@ -1773,20 +1989,20 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                             {/* Main Image Upload/Preview */}
                             <div className="mb-10">
                                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-3 ml-1">
-                                    {locale === 'fr' ? 'Image Principale' : 'Main Image'}
+                                    {locale === 'fr' ? 'Image Principale (Aperçu Custom)' : 'Main Image (Custom Preview)'}
                                 </label>
                                 <div 
-                                    onClick={() => mainImageFileInputRef.current?.click()}
+                                    onClick={() => mainImageInputRef.current?.click()}
                                     className="aspect-video w-full relative bg-[#F5F5F7] border border-gray-100 rounded-[32px] overflow-hidden p-6 flex items-center justify-center cursor-pointer group hover:bg-gray-100 transition-all hover:border-blue-200"
                                 >
-                                    {activeProduct.imageSrc ? (
+                                    {mainImage ? (
                                         <>
                                             <Image
-                                                src={activeProduct.imageSrc}
-                                                alt={t(activeProduct.nameKey)}
+                                                src={mainImage}
+                                                alt="Main Preview"
                                                 fill
                                                 unoptimized
-                                                className="object-contain"
+                                                className="object-contain p-4"
                                             />
                                             <div className="absolute inset-0 bg-black/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center justify-center text-blue-600">
@@ -1796,13 +2012,16 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                         </>
                                     ) : (
                                         <div className="flex flex-col items-center justify-center text-gray-400">
-                                            <Upload size={48} className="mb-3" />
-                                            <span className="text-sm font-black uppercase tracking-tighter">{locale === 'fr' ? 'Téléchargement' : 'Upload'}</span>
+                                            <ImageIcon size={48} className="mb-3 opacity-20" />
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-xs font-black uppercase tracking-widest mb-1">{locale === 'fr' ? 'Ajouter un aperçu' : 'Add custom preview'}</span>
+                                                <span className="text-[10px] font-bold opacity-60 uppercase">{locale === 'fr' ? 'Optionnel (Remplace l\'aperçu auto)' : 'Optional (Overrides auto preview)'}</span>
+                                            </div>
                                         </div>
                                     )}
                                     <input 
                                         type="file" 
-                                        ref={mainImageFileInputRef} 
+                                        ref={mainImageInputRef} 
                                         className="hidden" 
                                         accept="image/*"
                                         onChange={(e) => {
@@ -1811,13 +2030,24 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                 const reader = new FileReader();
                                                 reader.onload = (event) => {
                                                     if (event.target?.result) {
-                                                        setActiveProduct(prev => ({ ...prev, imageSrc: event.target?.result as string }));
+                                                        setMainImage(event.target?.result as string);
                                                     }
                                                 };
                                                 reader.readAsDataURL(file);
                                             }
                                         }}
                                     />
+                                    {mainImage && (
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMainImage(null);
+                                            }}
+                                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors z-20"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
@@ -1827,10 +2057,10 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                 </label>
                                 <input 
                                     type="text"
-                                    value={t(activeProduct.nameKey) === activeProduct.nameKey ? activeProduct.nameKey : t(activeProduct.nameKey)}
-                                    onChange={(e) => setActiveProduct(prev => ({ ...prev, nameKey: e.target.value }))}
+                                    value={productTitle}
+                                    onChange={(e) => setProductTitle(e.target.value)}
                                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all placeholder:text-gray-300"
-                                    placeholder={locale === 'fr' ? 'Ex: T-shirt Premium' : 'Ex: Premium T-shirt'}
+                                    placeholder={locale === 'fr' ? 'Entrez le nom du produit' : 'Enter product name'}
                                 />
                             </div>
 
@@ -1839,20 +2069,18 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">{locale === 'fr' ? 'Prix ($)' : 'Price ($)'}</label>
                                         <input 
-                                            type="number"
-                                            value={activeProduct.price}
-                                            onChange={(e) => setActiveProduct(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                                            type="text"
+                                            value={productPrice}
+                                            onChange={(e) => setProductPrice(e.target.value)}
                                             className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
+                                            placeholder="0.00"
                                         />
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5 ml-1">{locale === 'fr' ? 'Min. Commande' : 'Min. Order'}</label>
-                                        <input 
-                                            type="number"
-                                            value={activeProduct.minimumOrder}
-                                            onChange={(e) => setActiveProduct(prev => ({ ...prev, minimumOrder: parseInt(e.target.value) || 0 }))}
-                                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all"
-                                        />
+                                        <div className="w-full bg-gray-100 border border-gray-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-400 cursor-not-allowed">
+                                            {activeProduct.minimumOrder || 1}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -1966,7 +2194,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                     </button>
                                 </div>
                                 <div className="flex gap-3 overflow-x-auto no-scrollbar pt-1">
-                                    {colors.map(color => (
+                                    {sides[0].colors.map(color => (
                                         <div
                                             key={color.id}
                                             onClick={() => handleSwitchColor(color.id)}
@@ -2012,7 +2240,7 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                     </button>
                                 </div>
                                 <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                                    {activeColor.sides.map(side => (
+                                    {sides.map(side => (
                                         <div
                                             key={side.id}
                                             onClick={() => handleSwitchSide(side.id)}
@@ -2031,8 +2259,8 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                                 <Edit2 size={14} />
                                             </button>
                                             <div className="w-24 h-24 relative bg-gray-50 border-b border-gray-100 flex items-center justify-center p-2 group-hover/side:opacity-90 shadow-inner">
-                                                {side.imageSrc ? (
-                                                    <img src={side.imageSrc} className="w-full h-full object-contain transition-transform" alt="" />
+                                                {side.colors.find(c => c.id === activeColorId)?.imageSrc ? (
+                                                    <img src={side.colors.find(c => c.id === activeColorId)?.imageSrc} className="w-full h-full object-contain transition-transform" alt="" />
                                                 ) : (
                                                     <div className="flex flex-col items-center justify-center text-gray-300">
                                                         <Upload size={24} className="mb-2" />
@@ -2055,14 +2283,14 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                         {locale === 'fr' ? `Image pour : ${activeSide.nameFr}` : `Image for: ${activeSide.name}`}
                                     </label>
                                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100">
-                                        <div className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: activeColor.hex }} />
-                                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-tight">{activeColor.name}</span>
+                                        <div className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: activeColorImg.hex }} />
+                                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-tight">{activeColorImg.name}</span>
                                     </div>
                                 </div>
                                 <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all cursor-pointer overflow-hidden relative group">
-                                    {activeSide.imageSrc ? (
+                                    {activeColorImg.imageSrc ? (
                                         <>
-                                            <img src={activeSide.imageSrc} className="w-full h-full object-contain p-4" alt="side preview" />
+                                            <img src={activeColorImg.imageSrc} className="w-full h-full object-contain p-4" alt="side preview" />
                                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Upload className="text-white" size={24} />
@@ -2088,14 +2316,14 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                             reader.onload = (event) => {
                                                 if (event.target?.result) {
                                                     const newSrc = event.target.result as string;
-                                                    setColors(prev => prev.map(c => {
-                                                        if (c.id === activeColorId) {
+                                                    setSides(prev => prev.map(s => {
+                                                        if (s.id === activeSideId) {
                                                             return {
-                                                                ...c,
-                                                                sides: c.sides.map(s => s.id === activeSideId ? { ...s, imageSrc: newSrc } : s)
+                                                                ...s,
+                                                                colors: s.colors.map(c => c.id === activeColorId ? { ...c, imageSrc: newSrc } : c)
                                                             };
                                                         }
-                                                        return c;
+                                                        return s;
                                                     }));
                                                 }
                                             };
@@ -2179,19 +2407,18 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                 onClick={() => {
                                     if (newColorName && newColorHex) {
                                         const id = newColorName.toLowerCase().replace(/\s+/g, '-');
-                                        setColors(prev => [
-                                            ...prev,
-                                            {
-                                                id,
-                                                name: newColorName,
-                                                hex: newColorHex,
-                                                sides: prev[0].sides.map(s => ({
-                                                    ...s,
-                                                    imageSrc: '',
-                                                    elements: []
-                                                }))
-                                            }
-                                        ]);
+                                        setSides(prev => prev.map(s => ({
+                                            ...s,
+                                            colors: [
+                                                ...s.colors,
+                                                {
+                                                    id,
+                                                    name: newColorName,
+                                                    hex: newColorHex,
+                                                    imageSrc: ''
+                                                }
+                                            ]
+                                        })));
                                         setShowAddColorModal(false);
                                         setNewColorName('');
                                         setNewColorHex('#000000');
@@ -2225,15 +2452,18 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                             </div>
                             <button
                                 onClick={() => {
-                                    if (colors.length <= 1) {
+                                    if (sides[0].colors.length <= 1) {
                                         alert(locale === 'fr' ? 'Impossible de supprimer la dernière couleur.' : 'Cannot delete the last color.');
                                         return;
                                     }
                                     if (confirm(locale === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette couleur ?' : 'Are you sure you want to delete this color?')) {
-                                        const newColors = colors.filter(c => c.id !== editingColorId);
-                                        setColors(newColors);
+                                        const remainingColors = sides[0].colors.filter(c => c.id !== editingColorId);
+                                        setSides(prev => prev.map(s => ({
+                                            ...s,
+                                            colors: s.colors.filter(c => c.id !== editingColorId)
+                                        })));
                                         if (activeColorId === editingColorId) {
-                                            handleSwitchColor(newColors[0].id);
+                                            setActiveColorId(remainingColors[0].id);
                                         }
                                         setShowEditColorModal(false);
                                     }
@@ -2290,11 +2520,14 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                             <button
                                 onClick={() => {
                                     if (editColorName && editColorHex) {
-                                        setColors(prev => prev.map(c =>
-                                            c.id === editingColorId
-                                                ? { ...c, name: editColorName, hex: editColorHex }
-                                                : c
-                                        ));
+                                        setSides(prev => prev.map(s => ({
+                                            ...s,
+                                            colors: s.colors.map(c => 
+                                                c.id === editingColorId 
+                                                    ? { ...c, name: editColorName, hex: editColorHex } 
+                                                    : c
+                                            )
+                                        })));
                                         setShowEditColorModal(false);
                                     }
                                 }}
@@ -2370,20 +2603,27 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                 onClick={() => {
                                     if (newSideName && newSideNameFr) {
                                         const id = newSideName.toLowerCase().replace(/\s+/g, '-');
-                                        setColors(prev => prev.map(c => ({
-                                            ...c,
-                                            sides: [
-                                                ...c.sides,
-                                                {
-                                                    id,
-                                                    name: newSideName,
-                                                    nameFr: newSideNameFr,
-                                                    imageSrc: newSideImageSrc,
-                                                    designZone: { ...c.sides[0].designZone, id: `zone-${id}` },
-                                                    elements: []
-                                                }
-                                            ]
-                                        })));
+                                        const sourceSide = sides[0];
+                                        setSides(prev => [
+                                            ...prev,
+                                            {
+                                                id,
+                                                name: newSideName,
+                                                nameFr: newSideNameFr,
+                                                designZone: { 
+                                                    id: `zone-${id}`,
+                                                    x: sourceSide.designZone.x,
+                                                    y: sourceSide.designZone.y,
+                                                    width: sourceSide.designZone.width,
+                                                    height: sourceSide.designZone.height,
+                                                    elements: [] 
+                                                },
+                                                colors: sourceSide.colors.map(c => ({
+                                                    ...c,
+                                                    imageSrc: ''
+                                                }))
+                                            }
+                                        ]);
                                         setNewSideName('');
                                         setNewSideNameFr('');
                                         setNewSideImageSrc('');
@@ -2419,21 +2659,15 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                             </div>
                             <button
                                 onClick={() => {
-                                    if (activeColor.sides.length <= 1) {
+                                    if (sides.length <= 1) {
                                         alert(locale === 'fr' ? 'Impossible de supprimer la dernière face.' : 'Cannot delete the last side.');
                                         return;
                                     }
                                     if (confirm(locale === 'fr' ? 'Êtes-vous sûr de vouloir supprimer cette face ?' : 'Are you sure you want to delete this side?')) {
-                                        setColors(prev => prev.map(c => {
-                                            if (c.id === activeColorId) {
-                                                const newSides = c.sides.filter(s => s.id !== editingSideId);
-                                                return { ...c, sides: newSides };
-                                            }
-                                            return c;
-                                        }));
+                                        const newSides = sides.filter(s => s.id !== editingSideId);
+                                        setSides(newSides);
                                         if (activeSideId === editingSideId) {
-                                            const remainingSides = activeColor.sides.filter(s => s.id !== editingSideId);
-                                            handleSwitchSide(remainingSides[0].id);
+                                            handleSwitchSide(newSides[0].id);
                                         }
                                         setShowEditSideModal(false);
                                     }
@@ -2483,19 +2717,11 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                             <button
                                 onClick={() => {
                                     if (editSideName && editSideNameFr) {
-                                        setColors(prev => prev.map(c => {
-                                            if (c.id === activeColorId) {
-                                                return {
-                                                    ...c,
-                                                    sides: c.sides.map(s =>
-                                                        s.id === editingSideId
-                                                            ? { ...s, name: editSideName, nameFr: editSideNameFr }
-                                                            : s
-                                                    )
-                                                };
-                                            }
-                                            return c;
-                                        }));
+                                        setSides(prev => prev.map(s => 
+                                            s.id === editingSideId 
+                                                ? { ...s, name: editSideName, nameFr: editSideNameFr } 
+                                                : s
+                                        ));
                                         setShowEditSideModal(false);
                                     }
                                 }}
@@ -2553,6 +2779,32 @@ export default function GrafyEditor({ editMode = false }: { editMode?: boolean }
                                 {locale === 'fr' ? 'Recentrer' : 'Center'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ══════════════════════ GLOBAL LOADING OVERLAY ══════════════════════ */}
+            {(isSavingInEditor || isPreloading) && (
+                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="relative">
+                        <div className="w-20 h-20 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center">
+                                <Tag size={20} className="text-black animate-pulse" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-8 flex flex-col items-center">
+                        <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                            {isPreloading
+                                ? (locale === 'fr' ? 'Initialisation du studio...' : 'Initializing studio...')
+                                : (locale === 'fr' ? 'Génération du studio...' : 'Generating studio assets...')}
+                        </h3>
+                        <p className="text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest animate-pulse">
+                            {isPreloading 
+                                ? (locale === 'fr' ? 'Mise en cache des déclinaisons' : 'Caching product variations')
+                                : (locale === 'fr' ? 'Optimisation des aperçus PNG' : 'Optimizing PNG previews')}
+                        </p>
                     </div>
                 </div>
             )}

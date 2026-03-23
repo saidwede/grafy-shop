@@ -15,9 +15,10 @@ interface EditZoneProps {
     onSelect: () => void;
     onChange: (newProps: any) => void;
     children: React.ReactNode;
+    hideLimits?: boolean;
 }
 
-const EditZone: React.FC<EditZoneProps> = ({ zoneProps, isSelected, selectedId, onSelect, onChange, children }) => {
+const EditZone: React.FC<EditZoneProps> = ({ zoneProps, isSelected, selectedId, onSelect, onChange, children, hideLimits }) => {
     const shapeRef = useRef<Konva.Group>(null);
     const trRef = useRef<Konva.Transformer>(null);
     const elementTrRef = useRef<Konva.Transformer>(null);
@@ -139,9 +140,9 @@ const EditZone: React.FC<EditZoneProps> = ({ zoneProps, isSelected, selectedId, 
                 <Rect
                     width={zoneProps.width}
                     height={zoneProps.height}
-                    stroke="#D1D5DB"
+                    stroke={hideLimits ? 'transparent' : "#D1D5DB"}
                     strokeWidth={1}
-                    dash={[5, 5]}
+                    dash={hideLimits ? [] : [5, 5]}
                     fill="transparent"
                     listening={true}
                 />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ShoppingBag, User, Heart, Search, ChevronDown, Languages, X as CloseIcon, ArrowRight } from 'lucide-react';
+import { ShoppingBag, User, Heart, Search, ChevronDown, Languages, X as CloseIcon, ArrowRight, LayoutGrid, LogOut, Layout } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';
 import { useState, useRef, useEffect } from 'react';
@@ -44,7 +44,6 @@ const CATEGORIES = [
 ];
 
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, Layout } from 'lucide-react';
 
 export default function Header() {
     const { locale, setLocale, t } = useLanguage();
@@ -379,6 +378,14 @@ export default function Header() {
                                 <div className="p-3 flex flex-col gap-2">
                                     {user ? (
                                         <>
+                                            <Link
+                                                href="/dashboard"
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-white border border-black/5 text-black text-xs font-black rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-tight"
+                                                onClick={() => setIsAccountOpen(false)}
+                                            >
+                                                {locale === 'fr' ? 'Tableau de bord' : 'Dashboard'}
+                                                <LayoutGrid size={14} className="text-gray-400" />
+                                            </Link>
                                             <Link
                                                 href="/account?tab=orders"
                                                 className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 text-black text-xs font-bold rounded-xl hover:bg-gray-100 transition-colors"
