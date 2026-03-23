@@ -289,6 +289,7 @@ export default function GrafyEditor({
 
     // Handle switching color/side
     const handleSwitchSide = (sideId: string) => {
+        setSelectedId(null);
         const nextSide = sides.find(s => s.id === sideId);
         if (nextSide) {
             setElements(nextSide.designZone.elements);
@@ -298,6 +299,7 @@ export default function GrafyEditor({
     };
 
     const handleSwitchColor = (colorId: string) => {
+        setSelectedId(null);
         setActiveColorId(colorId);
     };
     const [addTool, setAddTool] = useState<Tool | null>(null);
@@ -873,8 +875,13 @@ export default function GrafyEditor({
 
     const handleStageClick = (e: any) => {
         if (hasMovedRef.current) return;
-        // deselect when clicking on empty area
-        if (e.target === e.target.getStage()) {
+        
+        const clickedOnEmpty = 
+            e.target === e.target.getStage() || 
+            e.target.name() === 'product-mockup' || 
+            e.target.name() === 'frame-group';
+
+        if (clickedOnEmpty) {
             setSelectedId(null);
         }
     };
@@ -1564,6 +1571,7 @@ export default function GrafyEditor({
 
                                                 return (
                                                     <Group
+                                                        name="frame-group"
                                                         x={stageDimensions.width / 2}
                                                         y={stageDimensions.height / 2}
                                                         scaleX={fitScale}
@@ -1591,12 +1599,13 @@ export default function GrafyEditor({
 
                                                             return (
                                                                 <KonvaImage
+                                                                    name="product-mockup"
                                                                     image={productImg}
                                                                     x={(frameWidth - drawW) / 2}
                                                                     y={(frameHeight - drawH) / 2}
                                                                     width={drawW}
                                                                     height={drawH}
-                                                                    listening={false}
+                                                                    listening={true}
                                                                 />
                                                             );
                                                         })()}
