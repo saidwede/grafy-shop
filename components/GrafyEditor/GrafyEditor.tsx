@@ -322,6 +322,86 @@ export default function GrafyEditor({
     const [hasCenteredInitial, setHasCenteredInitial] = useState(false);
     const hasMovedRef = useRef<boolean>(false);
 
+    // Undo/Redo history
+    const [history, setHistory] = useState<{ sides: ProductSide[], activeSideId: string, activeColorId: string }[]>([]);
+    const [future, setFuture] = useState<{ sides: ProductSide[], activeSideId: string, activeColorId: string }[]>([]);
+    const isUndoingRef = useRef(false);
+
+    const saveToHistory = useCallback(() => {
+        if (isUndoingRef.current) return;
+        setHistory(prev => [...prev.slice(-49), {
+            sides: JSON.parse(JSON.stringify(sides)),
+            activeSideId,
+            activeColorId
+        }]);
+        setFuture([]);
+    }, [sides, activeSideId, activeColorId]);
+
+    const undo = useCallback(() => {
+        if (history.length === 0) return;
+
+        isUndoingRef.current = true;
+        const snapshot = history[history.length - 1];
+        setHistory(prev => prev.slice(0, -1));
+        setFuture(prev => [{
+            sides: JSON.parse(JSON.stringify(sides)),
+            activeSideId,
+            activeColorId
+        }, ...prev]);
+
+        // RESTORE STATE
+        setSides(snapshot.sides);
+        setActiveSideId(snapshot.activeSideId);
+        setActiveColorId(snapshot.activeColorId);
+
+        const activeInSnap = snapshot.sides.find(s => s.id === snapshot.activeSideId) || snapshot.sides[0];
+        setElements(activeInSnap.designZone.elements);
+        setDesignZone(activeInSnap.designZone);
+
+        setTimeout(() => { isUndoingRef.current = false; }, 10);
+    }, [history, sides, activeSideId, activeColorId]);
+
+    const redo = useCallback(() => {
+        if (future.length === 0) return;
+
+        isUndoingRef.current = true;
+        const snapshot = future[0];
+        setFuture(prev => prev.slice(1));
+        setHistory(prev => [...prev, {
+            sides: JSON.parse(JSON.stringify(sides)),
+            activeSideId,
+            activeColorId
+        }]);
+
+        // RESTORE STATE
+        setSides(snapshot.sides);
+        setActiveSideId(snapshot.activeSideId);
+        setActiveColorId(snapshot.activeColorId);
+
+        const activeInSnap = snapshot.sides.find(s => s.id === snapshot.activeSideId) || snapshot.sides[0];
+        setElements(activeInSnap.designZone.elements);
+        setDesignZone(activeInSnap.designZone);
+
+        setTimeout(() => { isUndoingRef.current = false; }, 10);
+    }, [future, sides, activeSideId, activeColorId]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+            } else if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+                redo();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [undo, redo]);
+
     // Product selection sheet state
     const [showProductSheet, setShowProductSheet] = useState(false);
     const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -635,6 +715,7 @@ export default function GrafyEditor({
     }, []);
 
     const handleAddText = () => {
+        saveToHistory();
         const id = `text-${Date.now()}`;
         setElements([...elements, {
             id,
@@ -651,6 +732,7 @@ export default function GrafyEditor({
     };
 
     const handleAddImage = (src: string) => {
+        saveToHistory();
         const id = `image-${Date.now()}`;
         setElements([...elements, {
             id,
@@ -678,6 +760,7 @@ export default function GrafyEditor({
     };
 
     const handleAddSVG = (data: string) => {
+        saveToHistory();
         const id = `svg-${Date.now()}`;
         setElements([...elements, {
             id,
@@ -698,6 +781,7 @@ export default function GrafyEditor({
     };
 
     const handleElementChange = (id: string, newProps: any) => {
+        saveToHistory();
         setElements(elements.map(el => el.id === id ? newProps : el));
 
         // Check if element is off-zone
@@ -840,6 +924,7 @@ export default function GrafyEditor({
 
     const handleDuplicate = () => {
         if (!selectedId) return;
+        saveToHistory();
         const el = elements.find(el => el.id === selectedId);
         if (!el) return;
 
@@ -856,6 +941,7 @@ export default function GrafyEditor({
 
     const handleDelete = () => {
         if (!selectedId) return;
+        saveToHistory();
         setElements(elements.filter(el => el.id !== selectedId));
         setSelectedId(null);
     };
@@ -1186,12 +1272,22 @@ export default function GrafyEditor({
             {/* ══════════════════════ TOP BAR ══════════════════════ */}
             <header className="h-16 flex items-start justify-between px-4 shrink-0 z-20 relative border-b border-gray-100">
                 {/* Vertical Undo/Redo (Far Left) */}
-                <div className="shadow-sm border border-white/80 flex flex-col bg-white rounded-xl">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all text-gray-600">
+                <div className="shadow-sm border border-white/80 flex flex-col bg-white rounded-xl overflow-hidden">
+                    <button 
+                        onClick={undo}
+                        disabled={history.length === 0}
+                        className={`w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-all ${history.length === 0 ? 'text-gray-200' : 'text-gray-600'}`}
+                        title={locale === 'fr' ? 'Annuler (Cmd+Z)' : 'Undo (Cmd+Z)'}
+                    >
                         <Undo2 size={20} strokeWidth={1.5} />
                     </button>
-                    <div className="h-px bg-gray-200 mx-1.5" />
-                    <button className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm transition-all text-gray-400">
+                    <div className="h-px bg-gray-100 mx-1" />
+                    <button 
+                        onClick={redo}
+                        disabled={future.length === 0}
+                        className={`w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-all ${future.length === 0 ? 'text-gray-200' : 'text-gray-600'}`}
+                        title={locale === 'fr' ? 'Rétablir (Cmd+Shift+Z)' : 'Redo (Cmd+Shift+Z)'}
+                    >
                         <Redo2 size={20} strokeWidth={1.5} />
                     </button>
                 </div>
@@ -1615,7 +1711,10 @@ export default function GrafyEditor({
                                                             isSelected={selectedId === designZone.id}
                                                             selectedId={selectedId}
                                                             onSelect={() => handleSelect(designZone.id)}
-                                                            onChange={(newProps) => setDesignZone(newProps)}
+                                                            onChange={(newProps) => {
+                                                                saveToHistory();
+                                                                setDesignZone(newProps);
+                                                            }}
                                                             hideLimits={hideLimits}
                                                             mockupWidth={frameWidth}
                                                             mockupHeight={frameHeight}
