@@ -138,7 +138,7 @@ export default function DashboardPage() {
                             {locale === 'fr' ? 'Nouveau Design' : 'New Design'}
                         </span>
                         <Plus size={18} className="relative z-10 group-hover:translate-x-2 transition-transform" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute inset-0 bg-linear-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </Link>
                 </div>
 

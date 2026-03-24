@@ -121,7 +121,7 @@ export default function EditProductPage() {
     }
 
     return (
-        <div className="h-screen overflow-hidden">
+        <div className="h-screen overflow-hidden lg:pt-20">
             <GrafyEditor 
                 initialData={initialData} 
                 onSave={handleSave} 

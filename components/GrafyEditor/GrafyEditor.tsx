@@ -441,7 +441,7 @@ export default function GrafyEditor({
 
 
     // Desktop tool state
-    const [desktopActiveTool, setDesktopActiveTool] = useState<Tool>('select');
+    const [desktopActiveTool, setDesktopActiveTool] = useState<Tool | null>('select');
 
     // Previous side ID to guard synchronization
     const prevSideIdRef = useRef(activeSideId);
@@ -1148,7 +1148,7 @@ export default function GrafyEditor({
     const closeAdd = () => { setShowAddSheet(false); setAddTool(null); }
 
     // ─── Properties content ─────────────────────────────────────────────────
-    const ToolContent = ({ tool }: { tool: Tool }) => (
+    const ToolContent = ({ tool }: { tool: Tool | null }) => (
         <>
             {tool === 'text' && (
                 <div className="p-6 text-center text-gray-500 italic">
@@ -1267,30 +1267,88 @@ export default function GrafyEditor({
     );
 
     return (
-        <div className="h-screen flex flex-col bg-[#F5F5F7] overflow-hidden pt-18 md:pt-24">
-
-            {/* ══════════════════════ TOP BAR ══════════════════════ */}
-            <header className="h-16 flex items-start justify-between px-4 shrink-0 z-20 relative border-b border-gray-100">
-                {/* Vertical Undo/Redo (Far Left) */}
-                <div className="shadow-sm border border-white/80 flex flex-col bg-white rounded-xl overflow-hidden">
+        <div className="h-full flex bg-[#F5F5F7] overflow-hidden lg:pt-0 pt-18 md:pt-24 relative">
+            {/* DESKTOP LEFT SIDEBAR */}
+            <aside className="hidden lg:flex lg:py-20 flex-col w-[76px] bg-white border-r border-gray-100 items-center justify-between py-6 shrink-0 z-50">
+                {/* Group 1: History */}
+                <div className="flex flex-col gap-1 items-center">
                     <button 
                         onClick={undo}
                         disabled={history.length === 0}
-                        className={`w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-all ${history.length === 0 ? 'text-gray-200' : 'text-gray-600'}`}
+                        className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${history.length === 0 ? 'text-gray-300 bg-gray-50/50' : 'text-gray-700 hover:bg-gray-100 active:scale-95'}`}
                         title={locale === 'fr' ? 'Annuler (Cmd+Z)' : 'Undo (Cmd+Z)'}
                     >
-                        <Undo2 size={20} strokeWidth={1.5} />
+                        <Undo2 size={22} strokeWidth={1.5} />
                     </button>
-                    <div className="h-px bg-gray-100 mx-1" />
                     <button 
                         onClick={redo}
                         disabled={future.length === 0}
-                        className={`w-10 h-10 flex items-center justify-center hover:bg-gray-50 transition-all ${future.length === 0 ? 'text-gray-200' : 'text-gray-600'}`}
-                        title={locale === 'fr' ? 'Rétablir (Cmd+Shift+Z)' : 'Redo (Cmd+Shift+Z)'}
+                        className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${future.length === 0 ? 'text-gray-300 bg-gray-50/50' : 'text-gray-700 hover:bg-gray-100 active:scale-95'}`}
+                        title={locale === 'fr' ? 'Rétablir (Cmd+Y)' : 'Redo (Cmd+Y)'}
                     >
-                        <Redo2 size={20} strokeWidth={1.5} />
+                        <Redo2 size={22} strokeWidth={1.5} />
                     </button>
                 </div>
+
+                {/* Group 2: Tools */}
+                <div className="flex flex-col items-center gap-3">
+                    {ADD_TOOLS.map(tool => (
+                        <button key={tool.id} onClick={() => {
+                            handleSelect(null);
+                            setEditingTextId(null);
+                            if (tool.id === 'text') {
+                                handleAddText();
+                            } else {
+                                setDesktopActiveTool(tool.id);
+                            }
+                        }}
+                            title={locale === 'fr' ? tool.labelFr : tool.labelEn}
+                            className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all text-[10px] font-bold ${desktopActiveTool === tool.id ? 'bg-black text-white shadow-xl shadow-black/10' : 'text-gray-500 hover:bg-gray-100 hover:text-black hover:scale-105 active:scale-95'}`}>
+                            {tool.icon}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Group 3: Product */}
+                <div className="flex flex-col items-center">
+                    <button 
+                        onClick={() => setShowProductSheet(true)}
+                        className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-500 hover:bg-gray-100 hover:text-black transition-all hover:scale-105 active:scale-95"
+                        title={locale === 'fr' ? 'Changer de produit' : 'Change product'}
+                    >
+                        <Tag size={22} strokeWidth={1.5} />
+                    </button>
+                </div>
+            </aside>
+
+            {/* DESKTOP TOOL CONTENT PANEL (Floating) */}
+            <aside className={`hidden lg:flex flex-col bg-white/95 backdrop-blur-xl shadow-2xl border border-white/50 absolute left-[76px] top-0 h-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden z-40 ${desktopActiveTool ? 'w-80 opacity-100 translate-x-0' : 'w-0 opacity-0 -translate-x-8 pointer-events-none'}`}>
+                <div className="w-80 flex flex-col h-full py-2">
+                    <div className="px-6 pb-6 flex items-center justify-between border-b border-gray-100 shrink-0">
+                        <span className="text-sm font-black uppercase tracking-widest text-gray-900">
+                            {(() => {
+                                const tool = ADD_TOOLS.find(t => t.id === desktopActiveTool);
+                                return locale === 'fr' ? (tool?.labelFr || 'Propriétés') : (tool?.labelEn || 'Properties');
+                            })()}
+                        </span>
+                        <button 
+                            onClick={() => setDesktopActiveTool(null)}
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 transition-all active:scale-95"
+                            title={locale === 'fr' ? 'Fermer' : 'Close'}
+                        >
+                            <ChevronLeft size={20} strokeWidth={2.5} />
+                        </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <ToolContent tool={desktopActiveTool} />
+                    </div>
+                </div>
+            </aside>
+
+            <div className="flex-1 flex flex-col relative overflow-hidden">
+                {/* ══════════════════════ TOP BAR ══════════════════════ */}
+                <header className="h-16 flex items-center justify-between px-4 shrink-0 z-40 relative border-b border-gray-100 lg:absolute lg:top-4 lg:left-1/2 lg:-translate-x-1/2 lg:px-6 lg:border-b-0 lg:h-16 transition-all">
+                    <div className="lg:hidden" />
 
                 {(!selectedId || selectedId === designZone.id) ? (
                     <>
@@ -1611,37 +1669,44 @@ export default function GrafyEditor({
                 )}
             </header>
 
-            {/* ══════════════════════ BODY ══════════════════════ */}
-            <div className="flex-1 flex overflow-hidden">
-
-                {/* DESKTOP LEFT SIDEBAR */}
-                <aside className="hidden lg:flex flex-col w-[72px] bg-white border-r border-gray-200 items-center py-4 gap-2 shrink-0">
-                    <div className="flex flex-col items-center gap-2">
-                        {ADD_TOOLS.map(tool => (
-                            <button key={tool.id} onClick={() => {
-                                handleSelect(null);
-                                setEditingTextId(null);
-                                if (tool.id === 'text') {
-                                    handleAddText();
-                                } else {
-                                    setDesktopActiveTool(tool.id);
-                                }
-                            }}
-                                title={locale === 'fr' ? tool.labelFr : tool.labelEn}
-                                className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all text-xs ${desktopActiveTool === tool.id ? 'bg-black text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-black'}`}>
-                                {tool.icon}
-                            </button>
-                        ))}
-                    </div>
-                </aside>
-
                 {/* ── Canvas ── */}
                 <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
                     {/* Product image takes most of the space */}
                     <div className="flex-1 w-full flex items-center justify-center p-4 lg:p-8">
                         <div className="relative w-full max-w-md lg:max-w-lg h-full flex items-center justify-center">
+                            {/* Floating Side Switch (Desktop) - Outside touch-none container */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-row gap-4 z-50">
+                                {sides.map((side) => {
+                                    const sideColorImg = side.colors.find(c => c.id === activeColorId) || side.colors[0];
+                                    const isActive = side.id === activeSideId;
+                                    return (
+                                        <button
+                                            key={side.id}
+                                            onClick={() => handleSwitchSide(side.id)}
+                                            className={`group relative flex flex-col items-center gap-2 p-1.5 rounded-2xl transition-all duration-300 ${isActive ? 'scale-110 ' : 'hover:scale-105'}`}
+                                        >
+                                            <div className={`w-16 h-16 rounded-xl overflow-hidden border transition-colors duration-300 flex items-center justify-center bg-[#F9F9FB] ${isActive ? 'border-black/20' : 'border-transparent group-hover:border-black/5'}`}>
+                                                <img 
+                                                    src={sideColorImg.imageSrc} 
+                                                    alt={side.name} 
+                                                    className={`w-full h-full object-contain p-2 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} 
+                                                />
+                                            </div>
+                                            <div className="flex flex-col items-center">
+                                                <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? 'text-black' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                                                    {side.name}
+                                                </span>
+                                                {isActive && (
+                                                    <div className="w-1 h-1 bg-black rounded-full mt-1 animate-in zoom-in duration-300" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
                             {/* Product */}
-                            <div ref={containerRef} className="relative w-full h-full touch-none">
+                            <div ref={containerRef} className="relative w-full h-full touch-none flex items-center justify-center">
                                 <Stage
                                     width={stageDimensions.width}
                                     height={stageDimensions.height}
@@ -1751,7 +1816,7 @@ export default function GrafyEditor({
                     </div>
 
                     {/* Side navigation */}
-                    <div className="flex items-center gap-4 pb-3 lg:pb-6">
+                    <div className="flex lg:hidden items-center gap-4 pb-3 lg:pb-6">
                         <button onClick={prevSide} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors">
                             <ChevronLeft size={22} strokeWidth={1.5} />
                         </button>
@@ -1775,7 +1840,7 @@ export default function GrafyEditor({
 
                     {/* Floating Toolbar */}
                     {selectedId && selectedId !== designZone.id && (
-                        <div className="absolute bottom-4 lg:bottom-12 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-xl border border-gray-200 px-4 py-2 flex items-center gap-1.5 animate-in slide-in-from-bottom-4 duration-200 z-30">
+                        <div className="absolute bottom-4 lg:bottom-32 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-xl border border-gray-200 px-4 py-2 flex items-center gap-1.5 animate-in slide-in-from-bottom-4 duration-200 z-30">
                             {elements.find(el => el.id === selectedId)?.type === 'text' && (
                                 <button onClick={() => setEditingTextId(selectedId)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-700 transition-colors" title={locale === 'fr' ? 'Éditer le texte' : 'Edit text'}>
                                     <Edit2 size={18} strokeWidth={1.5} />
@@ -1806,20 +1871,116 @@ export default function GrafyEditor({
                         </div>
                     )}
                 </main>
-
-                {/* DESKTOP RIGHT PANEL */}
-                <aside className="hidden lg:flex flex-col w-72 bg-white border-l border-gray-200 shrink-0">
-                    <div className="px-6 py-4 border-b border-gray-100 text-sm font-bold">
-                        {(() => {
-                            const tool = ADD_TOOLS.find(t => t.id === desktopActiveTool);
-                            return locale === 'fr' ? (tool?.labelFr || 'Propriétés') : (tool?.labelEn || 'Properties');
-                        })()}
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        <ToolContent tool={desktopActiveTool} />
-                    </div>
-                </aside>
             </div>
+
+            {/* ══════════════════════ RIGHT SIDEBAR (Product Details) ══════════════════════ */}
+            <aside className="hidden lg:flex flex-col w-[340px] bg-white border-l border-gray-100 shrink-0 z-40 overflow-y-auto no-scrollbar">
+                <div className="p-8 space-y-10">
+                    {/* Header: Name & Price */}
+                    <div className="space-y-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                                {(() => {
+                                    const cat = CATEGORIES.find(c => c.key === activeProduct.categoryKey);
+                                    return cat ? t(cat.nameKey) : activeProduct.categoryKey;
+                                })()}
+                            </span>
+                            <h1 className="text-2xl font-black text-gray-900 leading-tight">
+                                {t(activeProduct.nameKey)}
+                            </h1>
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-black text-black">{activeProduct.price} €</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'HT / unité' : 'excl. VAT / unit'}</span>
+                        </div>
+                    </div>
+
+                    {/* Color Switcher */}
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-[11px] font-black uppercase tracking-widest text-gray-900">
+                                {locale === 'fr' ? 'Couleurs' : 'Colors'}
+                            </h3>
+                            <span className="text-[11px] font-bold text-gray-400">
+                                {activeColorImg.name}
+                            </span>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth p-1">
+                            {sides[0].colors.map((color) => {
+                                const isActive = color.id === activeColorId;
+                                return (
+                                    <button
+                                        key={color.id}
+                                        onClick={() => setActiveColorId(color.id)}
+                                        className={`group relative shrink-0 w-16 h-16 rounded-xl border-2 transition-all duration-300 ${isActive ? 'border-black scale-105 shadow-md' : 'border-transparent hover:border-gray-200'}`}
+                                        title={color.name}
+                                    >
+                                        <div className="w-full h-full rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center p-1">
+                                            <img src={color.imageSrc} alt={color.name} className="w-full h-full object-contain" />
+                                        </div>
+                                        {isActive && (
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-black rounded-full flex items-center justify-center border-2 border-white">
+                                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Details section */}
+                    <div className="space-y-6 pt-6 border-t border-gray-100">
+                        {/* Minimum Order */}
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                    <ShoppingCart size={18} className="text-black" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">{locale === 'fr' ? 'Commande Min.' : 'Min. Order'}</span>
+                                    <span className="text-sm font-black text-gray-900">{activeProduct.minimumOrder} {locale === 'fr' ? 'pièces' : 'units'}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Sizes */}
+                        <div className="space-y-3">
+                            <h3 className="text-[11px] font-black uppercase tracking-widest text-gray-900">
+                                {locale === 'fr' ? 'Tailles disponibles' : 'Available Sizes'}
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {activeProduct.sizes.map(size => (
+                                    <span key={size} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-600 uppercase">
+                                        {size}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-3">
+                            <h3 className="text-[11px] font-black uppercase tracking-widest text-gray-900">
+                                {locale === 'fr' ? 'Détails du produit' : 'Product Details'}
+                            </h3>
+                            <p className="text-xs font-medium text-gray-500 leading-relaxed">
+                                {t(activeProduct.descriptionKey)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom CTA */}
+                <div className="mt-auto p-8 border-t border-gray-100 bg-white sticky bottom-0">
+                    <button 
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-black/10 hover:bg-gray-800 transition-all active:scale-[0.98] disabled:opacity-50"
+                    >
+                        {isSaving ? locale === 'fr' ? 'Enregistrement...' : 'Saving...' : locale === 'fr' ? 'Continuer' : 'Continue'}
+                    </button>
+                </div>
+            </aside>
 
             {/* ══════════════════════ MOBILE BOTTOM ══════════════════════ */}
             <div className="lg:hidden shrink-0 z-20">
@@ -3001,7 +3162,7 @@ export default function GrafyEditor({
 
             {/* ══════════════════════ GLOBAL LOADING OVERLAY ══════════════════════ */}
             {(isSavingInEditor || isPreloading) && (
-                <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-200 flex flex-col items-center justify-center bg-white/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="relative">
                         <div className="w-20 h-20 border-4 border-gray-100 border-t-black rounded-full animate-spin" />
                         <div className="absolute inset-0 flex items-center justify-center">
