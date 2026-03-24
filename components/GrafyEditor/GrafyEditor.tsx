@@ -1267,7 +1267,7 @@ export default function GrafyEditor({
     );
 
     return (
-        <div className="h-full flex bg-[#F5F5F7] overflow-hidden lg:pt-0 pt-18 md:pt-24 relative">
+        <div className="h-full flex flex-col bg-[#F5F5F7] overflow-hidden lg:pt-0 pt-18 md:pt-24 relative">
             {/* DESKTOP LEFT SIDEBAR */}
             <aside className="hidden lg:flex lg:py-20 flex-col w-[76px] bg-white border-r border-gray-100 items-center justify-between py-6 shrink-0 z-50">
                 {/* Group 1: History */}
@@ -1667,7 +1667,7 @@ export default function GrafyEditor({
                         </div>
                     </div>
                 )}
-            </header>
+                </header>
 
                 {/* ── Canvas ── */}
                 <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
@@ -1816,7 +1816,7 @@ export default function GrafyEditor({
                     </div>
 
                     {/* Side navigation */}
-                    <div className="flex lg:hidden items-center gap-4 pb-3 lg:pb-6">
+                    <div className="flex lg:hidden items-center gap-4 pb-8">
                         <button onClick={prevSide} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors">
                             <ChevronLeft size={22} strokeWidth={1.5} />
                         </button>
