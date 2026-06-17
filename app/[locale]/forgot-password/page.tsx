@@ -5,7 +5,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useLanguage } from '@/context/LanguageContext';
 import { Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 
 export default function ForgotPasswordPage() {
     const { t, locale } = useLanguage();

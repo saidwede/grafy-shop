@@ -12,7 +12,7 @@ import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 
 export default function LoginPage() {
     const { user, loading } = useAuth();

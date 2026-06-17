@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import { MOCK_PRODUCTS } from '@/constants/products';
 import ProductGallery from '@/components/ProductGallery';

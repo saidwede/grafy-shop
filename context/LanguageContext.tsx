@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 type Locale = 'en' | 'fr';
 
@@ -525,19 +526,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode; initialLoca
     children,
     initialLocale = 'en'
 }) => {
-    const [locale, setLocaleState] = useState<Locale>(initialLocale);
-
-    useEffect(() => {
-        // Sync state if initialLocale changes (e.g. server-side detection changes)
-        if (initialLocale && initialLocale !== locale) {
-            setLocaleState(initialLocale);
-        }
-    }, [initialLocale]);
+    const router = useRouter();
+    const pathname = usePathname();
+    const locale = initialLocale;
 
     const setLocale = (newLocale: Locale) => {
-        setLocaleState(newLocale);
-        // Set cookie for server-side detection on next request
         document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1 year
+        if (pathname) {
+            // Replace the locale in the pathname
+            const newPathname = pathname.replace(`/${locale}`, `/${newLocale}`);
+            router.push(newPathname);
+        } else {
+            router.push(`/${newLocale}`);
+        }
     };
 
     const t = (key: string) => {

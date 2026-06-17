@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 
 interface FAQItemProps {
     question: string;

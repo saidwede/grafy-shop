@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';

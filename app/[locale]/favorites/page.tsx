@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import { Heart, ArrowLeft, ShoppingBag } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';

@@ -13,7 +13,7 @@ import {
   Oswald, 
   Merriweather 
 } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { cookies, headers } from "next/headers";
 
 const geistSans = Geist({
@@ -104,23 +104,13 @@ import { AuthProvider } from "@/context/AuthContext";
 
 export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
-  const cookieStore = await cookies();
-  const headerStore = await headers();
-
-  let initialLocale: 'en' | 'fr' = 'en';
-
-  const savedLocale = cookieStore.get('NEXT_LOCALE')?.value;
-  if (savedLocale === 'en' || savedLocale === 'fr') {
-    initialLocale = savedLocale;
-  } else {
-    const acceptLanguage = headerStore.get('accept-language');
-    if (acceptLanguage?.startsWith('fr')) {
-      initialLocale = 'fr';
-    }
-  }
+  const { locale } = await params;
+  const initialLocale = (locale === 'fr' ? 'fr' : 'en') as 'en' | 'fr';
 
   return (
     <html lang={initialLocale}>

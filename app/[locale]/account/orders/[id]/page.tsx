@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 import { ChevronLeft, Package, Truck, CheckCircle, Clock, CreditCard, MapPin } from 'lucide-react';

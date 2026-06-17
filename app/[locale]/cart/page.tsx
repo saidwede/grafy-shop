@@ -1,7 +1,7 @@
 "use client";
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import { Trash2, ShoppingBag, ArrowLeft, Minus, Plus } from 'lucide-react';
 import { useState } from 'react';

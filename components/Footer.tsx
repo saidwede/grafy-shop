@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { Instagram, Facebook, Phone, Mail } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { BsTwitterX } from "react-icons/bs";

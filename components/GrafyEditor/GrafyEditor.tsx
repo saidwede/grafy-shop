@@ -8,7 +8,7 @@ import EditText from './EditText';
 import EditImage from './EditImage';
 import EditSVG from './EditSVG';
 import EditZone from './EditZone';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import {
     ArrowLeft,
@@ -153,7 +153,7 @@ const RECENT_IMAGES = [
     'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=200&fit=crop',
 ];
 
-const ADD_TOOLS: { id: Tool; icon: React.ReactNode; labelFr: string; labelEn: string }[] = [
+const ADD_TOOLS: { id: Tool; icon: React.ReactElement; labelFr: string; labelEn: string }[] = [
     { id: 'image', icon: <ImagePlus size={26} strokeWidth={1.5} />, labelFr: 'Images', labelEn: 'Images' },
     { id: 'text', icon: <Type size={26} strokeWidth={1.5} />, labelFr: 'Texte', labelEn: 'Text' },
     { id: 'art', icon: <LayoutGrid size={26} strokeWidth={1.5} />, labelFr: 'Motifs', labelEn: 'Patterns' },
@@ -441,7 +441,17 @@ export default function GrafyEditor({
 
 
     // Desktop tool state
-    const [desktopActiveTool, setDesktopActiveTool] = useState<Tool | null>('select');
+    const [desktopActiveTool, setDesktopActiveTool] = useState<Tool | null>(null);
+    const [contentVisible, setContentVisible] = useState(false);
+
+    useEffect(() => {
+        if (desktopActiveTool) {
+            const timer = setTimeout(() => setContentVisible(true), 300);
+            return () => clearTimeout(timer);
+        } else {
+            setContentVisible(false);
+        }
+    }, [desktopActiveTool]);
 
     // Previous side ID to guard synchronization
     const prevSideIdRef = useRef(activeSideId);
@@ -961,10 +971,10 @@ export default function GrafyEditor({
 
     const handleStageClick = (e: any) => {
         if (hasMovedRef.current) return;
-        
-        const clickedOnEmpty = 
-            e.target === e.target.getStage() || 
-            e.target.name() === 'product-mockup' || 
+
+        const clickedOnEmpty =
+            e.target === e.target.getStage() ||
+            e.target.name() === 'product-mockup' ||
             e.target.name() === 'frame-group';
 
         if (clickedOnEmpty) {
@@ -1267,29 +1277,22 @@ export default function GrafyEditor({
     );
 
     return (
-        <div className="h-full flex flex-col bg-[#F5F5F7] overflow-hidden lg:pt-0 pt-18 md:pt-24 relative">
+        <div className="h-full flex flex-col lg:flex-row bg-[#F5F5F7] overflow-hidden lg:pt-0 pt-18 md:pt-24 relative">
             {/* DESKTOP LEFT SIDEBAR */}
-            <aside className="hidden lg:flex lg:py-20 flex-col w-[76px] bg-white border-r border-gray-100 items-center justify-between py-6 shrink-0 z-50">
-                {/* Group 1: History */}
-                <div className="flex flex-col gap-1 items-center">
-                    <button 
-                        onClick={undo}
-                        disabled={history.length === 0}
-                        className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${history.length === 0 ? 'text-gray-300 bg-gray-50/50' : 'text-gray-700 hover:bg-gray-100 active:scale-95'}`}
-                        title={locale === 'fr' ? 'Annuler (Cmd+Z)' : 'Undo (Cmd+Z)'}
+            <aside className="hidden lg:flex pt-8 flex-col w-[76px] bg-white border-r border-gray-100 items-center justify-start gap-10 shrink-0 z-50">
+                {/* Group 1: Product */}
+                <div className="flex flex-col items-center">
+                    <button
+                        onClick={() => setShowProductSheet(true)}
+                        className="w-12 h-14 flex flex-col items-center justify-center rounded-2xl text-gray-700 hover:bg-gray-100 hover:text-black transition-all hover:scale-105 active:scale-95 gap-1"
+                        title={locale === 'fr' ? 'Changer de produit' : 'Change product'}
                     >
-                        <Undo2 size={22} strokeWidth={1.5} />
-                    </button>
-                    <button 
-                        onClick={redo}
-                        disabled={future.length === 0}
-                        className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all ${future.length === 0 ? 'text-gray-300 bg-gray-50/50' : 'text-gray-700 hover:bg-gray-100 active:scale-95'}`}
-                        title={locale === 'fr' ? 'Rétablir (Cmd+Y)' : 'Redo (Cmd+Y)'}
-                    >
-                        <Redo2 size={22} strokeWidth={1.5} />
+                        <Tag size={22} strokeWidth={1.5} />
+                        <span className="text-[10px] ">
+                            {locale === 'fr' ? 'Produit' : 'Product'}
+                        </span>
                     </button>
                 </div>
-
                 {/* Group 2: Tools */}
                 <div className="flex flex-col items-center gap-3">
                     {ADD_TOOLS.map(tool => (
@@ -1303,20 +1306,43 @@ export default function GrafyEditor({
                             }
                         }}
                             title={locale === 'fr' ? tool.labelFr : tool.labelEn}
-                            className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all text-[10px] font-bold ${desktopActiveTool === tool.id ? 'bg-black text-white shadow-xl shadow-black/10' : 'text-gray-500 hover:bg-gray-100 hover:text-black hover:scale-105 active:scale-95'}`}>
-                            {tool.icon}
+                            className={`w-12 h-16 rounded-2xl flex flex-col items-center justify-center transition-all text-gray-700 hover:bg-gray-100/50 hover:text-black hover:scale-105 active:scale-95 group`}>
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all ${desktopActiveTool === tool.id ? 'bg-black text-white shadow-lg' : 'group-hover:bg-gray-200/50'}`}>
+                                {React.cloneElement(tool.icon as React.ReactElement<{ size: number }>, { size: 22 })}
+                            </div>
+                            <span className="text-[10px] truncate w-full px-0.5 text-center mt-1">
+                                {locale === 'fr' ? tool.labelFr : tool.labelEn}
+                            </span>
                         </button>
                     ))}
                 </div>
-
-                {/* Group 3: Product */}
-                <div className="flex flex-col items-center">
-                    <button 
-                        onClick={() => setShowProductSheet(true)}
-                        className="w-12 h-12 flex items-center justify-center rounded-2xl text-gray-500 hover:bg-gray-100 hover:text-black transition-all hover:scale-105 active:scale-95"
-                        title={locale === 'fr' ? 'Changer de produit' : 'Change product'}
+                {/* Group 3: History */}
+                <div className="flex flex-col items-center gap-3">
+                    <button
+                        onClick={undo}
+                        disabled={history.length === 0}
+                        title={locale === 'fr' ? 'Annuler' : 'Undo'}
+                        className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center transition-all ${history.length === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100 hover:text-black hover:scale-105 active:scale-95 group'}`}
                     >
-                        <Tag size={22} strokeWidth={1.5} />
+                        <div className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all group-hover:bg-gray-200/50`}>
+                            <Undo2 size={22} strokeWidth={1.5} />
+                        </div>
+                        <span className="text-[10px] text-center mt-1">
+                            {locale === 'fr' ? 'Annuler' : 'Undo'}
+                        </span>
+                    </button>
+                    <button
+                        onClick={redo}
+                        disabled={future.length === 0}
+                        title={locale === 'fr' ? 'Rétablir' : 'Redo'}
+                        className={`w-12 h-14 rounded-2xl flex flex-col items-center justify-center transition-all ${future.length === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100 hover:text-black hover:scale-105 active:scale-95 group'}`}
+                    >
+                        <div className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all group-hover:bg-gray-200/50`}>
+                            <Redo2 size={22} strokeWidth={1.5} />
+                        </div>
+                        <span className="text-[10px] text-center mt-1">
+                            {locale === 'fr' ? 'Rétablir' : 'Redo'}
+                        </span>
                     </button>
                 </div>
             </aside>
@@ -1324,22 +1350,22 @@ export default function GrafyEditor({
             {/* DESKTOP TOOL CONTENT PANEL (Floating) */}
             <aside className={`hidden lg:flex flex-col bg-white/95 backdrop-blur-xl shadow-2xl border border-white/50 absolute left-[76px] top-0 h-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] overflow-hidden z-40 ${desktopActiveTool ? 'w-80 opacity-100 translate-x-0' : 'w-0 opacity-0 -translate-x-8 pointer-events-none'}`}>
                 <div className="w-80 flex flex-col h-full py-2">
-                    <div className="px-6 pb-6 flex items-center justify-between border-b border-gray-100 shrink-0">
-                        <span className="text-sm font-black uppercase tracking-widest text-gray-900">
+                    <div className="px-6 pb-6 flex items-center justify-between shrink-0">
+                        <span className="text-md font-medium text-gray-900">
                             {(() => {
                                 const tool = ADD_TOOLS.find(t => t.id === desktopActiveTool);
                                 return locale === 'fr' ? (tool?.labelFr || 'Propriétés') : (tool?.labelEn || 'Properties');
                             })()}
                         </span>
-                        <button 
+                        <button
                             onClick={() => setDesktopActiveTool(null)}
-                            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-gray-50 text-gray-400 hover:text-black hover:bg-gray-100 transition-all active:scale-95"
+                            className="w-10 h-10 flex items-center justify-center rounded-2xl text-black hover:text-black hover:bg-gray-100 transition-all active:scale-95"
                             title={locale === 'fr' ? 'Fermer' : 'Close'}
                         >
-                            <ChevronLeft size={20} strokeWidth={2.5} />
+                            <X size={20} strokeWidth={2.5} />
                         </button>
                     </div>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className={`flex-1 overflow-y-auto custom-scrollbar transition-opacity duration-300 ${contentVisible ? 'opacity-100' : 'opacity-0'}`}>
                         <ToolContent tool={desktopActiveTool} />
                     </div>
                 </div>
@@ -1347,326 +1373,325 @@ export default function GrafyEditor({
 
             <div className="flex-1 flex flex-col relative overflow-hidden">
                 {/* ══════════════════════ TOP BAR ══════════════════════ */}
-                <header className="h-16 flex items-center justify-between px-4 shrink-0 z-40 relative border-b border-gray-100 lg:absolute lg:top-4 lg:left-1/2 lg:-translate-x-1/2 lg:px-6 lg:border-b-0 lg:h-16 transition-all">
-                    <div className="lg:hidden" />
-
-                {(!selectedId || selectedId === designZone.id) ? (
-                    <>
-                        {/* Color picker pill (Centered) */}
-                        <div className="absolute left-1/2 -translate-x-1/2">
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowColorSheet(true)}
-                                    className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-white/80 text-sm font-medium"
-                                >
-                                    <div className='inline-block p-px border border-neutral-400 rounded-full'>
-                                        <div className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: activeColorImg.hex }} />
-                                    </div>
-                                    <span className="text-gray-700">{locale === 'fr' ? activeColorImg.name : activeColorImg.name}</span>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
-                                </button>
+                <header className="h-16 flex items-center pt-1 justify-between px-4 shrink-0 z-40 relative border-b border-gray-100 transition-all">
+                    <div className="w-10 lg:hidden" /> {/* Left spacer for mobile symmetry since color picker is absolute centered */}
+                    {(!selectedId || selectedId === designZone.id) ? (
+                        <>
+                            {/* Color picker pill (Centered) */}
+                            <div className="lg:hidden absolute left-1/2 -translate-x-1/2">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowColorSheet(true)}
+                                        className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-white/80 text-sm font-medium"
+                                    >
+                                        <div className='inline-block p-px border border-neutral-400 rounded-full'>
+                                            <div className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: activeColorImg.hex }} />
+                                        </div>
+                                        <span className="text-gray-700">{locale === 'fr' ? activeColorImg.name : activeColorImg.name}</span>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9" /></svg>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* More / Order CTA (Right side) */}
-                        <div className="flex items-center gap-2">
-                            {onSave && (
-                                <button
-                                    onClick={handleSave}
-                                    disabled={isSaving}
-                                    className="h-10 px-4 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-sm"
-                                >
-                                    {isSaving ? (
-                                        <Loader2 size={16} className="animate-spin text-gray-400" />
-                                    ) : (
-                                        <Save size={16} />
-                                    )}
-                                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
-                                        {locale === 'fr' ? 'Enregistrer' : 'Save'}
-                                    </span>
-                                </button>
-                            )}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowMoreSheet(true)}
-                                    className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-95 text-gray-600"
-                                >
-                                    <MoreHorizontal size={20} strokeWidth={1.5} />
-                                </button>
+                            {/* More / Order CTA (Right side) */}
+                            <div className="lg:hidden flex items-center gap-2">
+                                {onSave && (
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={isSaving}
+                                        className="h-10 px-4 bg-black text-white rounded-xl flex items-center gap-2 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 shadow-sm"
+                                    >
+                                        {isSaving ? (
+                                            <Loader2 size={16} className="animate-spin text-gray-400" />
+                                        ) : (
+                                            <Save size={16} />
+                                        )}
+                                        <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
+                                            {locale === 'fr' ? 'Enregistrer' : 'Save'}
+                                        </span>
+                                    </button>
+                                )}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowMoreSheet(true)}
+                                        className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100 hover:bg-gray-50 transition-all active:scale-95 text-gray-600"
+                                    >
+                                        <MoreHorizontal size={20} strokeWidth={1.5} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex-1 flex justify-end ml-4 min-w-0 relative">
-                        <div ref={toolbarRef} className="flex items-center bg-white rounded-full shadow-lg border border-gray-100 px-3 py-1.5 animate-in fade-in right-slide-in duration-200 overflow-x-auto no-scrollbar max-w-full z-20">
-                            {(() => {
-                                const selectedElement = elements.find(el => el.id === selectedId);
-                                if (!selectedElement) return null;
-                                return (
-                                    <>
+                        </>
+                    ) : (
+                        <div className="flex-1 flex justify-end ml-4 min-w-0 relative">
+                            <div ref={toolbarRef} className="flex items-center bg-white rounded-full shadow-lg border border-gray-100 px-3 py-1.5 animate-in fade-in right-slide-in duration-200 overflow-x-auto no-scrollbar max-w-full z-20">
+                                {(() => {
+                                    const selectedElement = elements.find(el => el.id === selectedId);
+                                    if (!selectedElement) return null;
+                                    return (
+                                        <>
 
-                                        {(selectedElement.type === 'text' || selectedElement.type === 'svg') && (
-                                            <div className="relative shrink-0" ref={colorPickerRef}>
+                                            {(selectedElement.type === 'text' || selectedElement.type === 'svg') && (
+                                                <div className="relative shrink-0" ref={colorPickerRef}>
+                                                    <button
+                                                        onClick={() => { updatePickerPosition(colorPickerRef); setShowElementColorPicker(!showElementColorPicker); }}
+                                                        className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center p-0.5 transition-transform hover:scale-105"
+                                                        title={locale === 'fr' ? 'Couleur' : 'Color'}
+                                                    >
+                                                        <div className="w-full h-full rounded-full border border-black/10" style={{ backgroundColor: selectedElement.fill }} />
+                                                    </button>
+                                                    {showElementColorPicker && createPortal(
+                                                        <div className="fixed bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 z-100 w-[220px] animate-in fade-in zoom-in-95 duration-200"
+                                                            style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
+                                                            data-dropdown-portal="true"
+                                                        >
+                                                            <div className="px-1 py-0.5 mb-3">
+                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Couleur de l\'élément' : 'Element Color'}</span>
+                                                            </div>
+                                                            <div className="flex flex-col gap-4">
+                                                                {/* Radial Rainbow Custom Selector */}
+                                                                <div className="relative group/custom">
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); customColorInputRef.current?.click(); }}
+                                                                        className="w-full h-12 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm relative overflow-hidden group border border-gray-100"
+                                                                        style={{
+                                                                            background: 'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
+                                                                        }}
+                                                                    >
+                                                                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/5 transition-colors">
+                                                                            <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm flex items-center gap-2 transform transition-transform group-hover:scale-105">
+                                                                                <Plus size={12} className="text-gray-800" />
+                                                                                <span className="text-[9px] font-bold text-gray-800 uppercase tracking-tight">{locale === 'fr' ? 'Personnalisé' : 'Custom'}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </button>
+                                                                    <input
+                                                                        ref={customColorInputRef}
+                                                                        type="color"
+                                                                        value={selectedElement.fill}
+                                                                        onChange={(e) => { updateSelected({ fill: e.target.value }); setShowElementColorPicker(false); }}
+                                                                        className="sr-only"
+                                                                    />
+                                                                </div>
+
+                                                                {/* Palette Swatches */}
+                                                                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                                                                    {COLORS.map(c => (
+                                                                        <button
+                                                                            key={c}
+                                                                            onClick={() => { updateSelected({ fill: c }); setShowElementColorPicker(false); }}
+                                                                            className="aspect-square w-8 h-8 shrink-0 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 shadow-sm"
+                                                                            style={{
+                                                                                backgroundColor: c,
+                                                                                borderColor: selectedElement.fill.toLowerCase() === c.toLowerCase() ? '#000' : c === '#ffffff' ? '#f3f4f6' : c,
+                                                                                transform: selectedElement.fill.toLowerCase() === c.toLowerCase() ? 'scale(1.1)' : 'scale(1)'
+                                                                            }}
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>,
+                                                        document.body
+                                                    )}
+                                                </div>
+                                            )}
+                                            {selectedElement.type === 'text' && (
+                                                <>
+                                                    <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
+                                                    {/* Size */}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button onClick={() => updateSelected({ fontSize: Math.max(8, (selectedElement.fontSize || 24) - 2) })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Minus size={14} /></button>
+                                                        <span className="text-sm font-bold w-8 text-center shrink-0">{Math.round(selectedElement.fontSize || 24)}</span>
+                                                        <button onClick={() => updateSelected({ fontSize: Math.min(120, (selectedElement.fontSize || 24) + 2) })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Plus size={14} /></button>
+                                                    </div>
+                                                    <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
+                                                    {/* Font */}
+                                                    <div className="relative flex items-center shrink-0" ref={fontPickerRef}>
+                                                        <button
+                                                            onClick={() => { updatePickerPosition(fontPickerRef); setShowFontPicker(!showFontPicker); }}
+                                                            className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 rounded-full transition-colors min-w-[120px] justify-between"
+                                                        >
+                                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                                <Type size={14} className="text-gray-400 shrink-0" />
+                                                                <span className="text-sm font-bold truncate text-gray-800" style={{ fontFamily: selectedElement.fontFamily }}>
+                                                                    {selectedElement.fontFamily}
+                                                                </span>
+                                                            </div>
+                                                            <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showFontPicker ? 'rotate-180' : ''}`} />
+                                                        </button>
+
+                                                        {showFontPicker && createPortal(
+                                                            <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-52 animate-in fade-in zoom-in-95 duration-200"
+                                                                style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
+                                                                data-dropdown-portal="true"
+                                                            >
+                                                                <div className="px-3 py-1.5 mb-1">
+                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Polices' : 'Fonts'}</span>
+                                                                </div>
+                                                                <div className="max-h-64 overflow-y-auto no-scrollbar">
+                                                                    {FONT_FAMILIES.map(f => (
+                                                                        <button
+                                                                            key={f}
+                                                                            onClick={() => {
+                                                                                const availableWeights = FONT_WEIGHTS[f] || ['400'];
+                                                                                const currentWeight = String(selectedElement.fontWeight || '400');
+                                                                                const newWeight = availableWeights.includes(currentWeight) ? currentWeight : availableWeights[0];
+                                                                                updateSelected({ fontFamily: f, fontWeight: newWeight });
+                                                                                setShowFontPicker(false);
+                                                                            }}
+                                                                            className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center justify-between transition-colors ${selectedElement.fontFamily === f ? 'text-black bg-gray-50/50' : 'text-gray-600'}`}
+                                                                        >
+                                                                            <span style={{ fontFamily: f }} className="text-[15px]">
+                                                                                {f}
+                                                                            </span>
+                                                                            {selectedElement.fontFamily === f && (
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                                                                            )}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>,
+                                                            document.body
+                                                        )}
+                                                    </div>
+
+                                                    <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
+
+                                                    {/* Weight */}
+                                                    <div className="relative flex items-center shrink-0" ref={weightPickerRef}>
+                                                        <button
+                                                            onClick={() => { updatePickerPosition(weightPickerRef); setShowWeightPicker(!showWeightPicker); }}
+                                                            className="flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-gray-100 rounded-full transition-colors min-w-[70px] justify-between"
+                                                        >
+                                                            <span className="text-sm font-bold text-gray-800">
+                                                                {WEIGHT_NAMES[selectedElement.fontWeight || '400']?.[locale] || (selectedElement.fontWeight || '400')}
+                                                            </span>
+                                                            <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showWeightPicker ? 'rotate-180' : ''}`} />
+                                                        </button>
+
+                                                        {showWeightPicker && createPortal(
+                                                            <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-32 animate-in fade-in zoom-in-95 duration-200"
+                                                                style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
+                                                                data-dropdown-portal="true"
+                                                            >
+                                                                <div className="px-3 py-1.5 mb-1">
+                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Poids' : 'Weight'}</span>
+                                                                </div>
+                                                                <div className="max-h-48 overflow-y-auto no-scrollbar">
+                                                                    {(FONT_WEIGHTS[selectedElement.fontFamily] || ['400']).map(w => (
+                                                                        <button
+                                                                            key={w}
+                                                                            onClick={() => { updateSelected({ fontWeight: w }); setShowWeightPicker(false); }}
+                                                                            className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between transition-colors ${String(selectedElement.fontWeight || '400') === w ? 'text-black bg-gray-50/50' : 'text-gray-600'}`}
+                                                                        >
+                                                                            <span style={{ fontFamily: selectedElement.fontFamily, fontWeight: w }} className="text-sm">
+                                                                                {WEIGHT_NAMES[w]?.[locale] || w}
+                                                                            </span>
+                                                                            {String(selectedElement.fontWeight || '400') === w && (
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-black" />
+                                                                            )}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            </div>,
+                                                            document.body
+                                                        )}
+                                                    </div>
+                                                    <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
+                                                    {/* Formatting */}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button onClick={() => handleToggleStyle('italic')} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${selectedElement.fontStyle?.includes('italic') ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                                                            <Italic size={14} />
+                                                        </button>
+                                                        <button onClick={handleToggleUnderline} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${selectedElement.textDecoration === 'underline' ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                                                            <Underline size={14} />
+                                                        </button>
+                                                        <button onClick={handleCycleAlign} className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
+                                                            {selectedElement.align === 'center' ? <AlignCenter size={14} /> : selectedElement.align === 'right' ? <AlignRight size={14} /> : <AlignLeft size={14} />}
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                            {(selectedElement.type === 'image' || selectedElement.type === 'svg') && (
+                                                <>
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button
+                                                            onClick={() => handleFlip('horizontal')}
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black transition-all"
+                                                            title={locale === 'fr' ? 'Retourner horizontalement' : 'Flip horizontal'}
+                                                        >
+                                                            <FlipHorizontal size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleFlip('vertical')}
+                                                            className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black transition-all"
+                                                            title={locale === 'fr' ? 'Retourner verticalement' : 'Flip vertical'}
+                                                        >
+                                                            <FlipVertical size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
+                                                </>
+                                            )}
+
+                                            {/* Rotation */}
+                                            <div className="flex items-center gap-1 shrink-0 px-1" title={locale === 'fr' ? 'Rotation' : 'Rotation'}>
+                                                <button onClick={() => updateSelected({ rotation: (selectedElement.rotation || 0) - 15 })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><RotateCcw size={14} /></button>
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="number"
+                                                        className="text-sm font-bold w-8 text-center bg-transparent outline-none p-0 appearance-none m-0"
+                                                        style={{ MozAppearance: 'textfield' }} // hide spin buttons
+                                                        value={Math.round(selectedElement.rotation || 0)}
+                                                        onChange={(e) => updateSelected({ rotation: Number(e.target.value) || 0 })}
+                                                    />
+                                                    <span className="text-sm font-bold text-gray-800 -ml-1">°</span>
+                                                </div>
+                                                <button onClick={() => updateSelected({ rotation: (selectedElement.rotation || 0) + 15 })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><RotateCw size={14} /></button>
+                                            </div>
+
+                                            <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
+                                            <div className="relative shrink-0" ref={positionPickerRef}>
                                                 <button
-                                                    onClick={() => { updatePickerPosition(colorPickerRef); setShowElementColorPicker(!showElementColorPicker); }}
-                                                    className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center p-0.5 transition-transform hover:scale-105"
-                                                    title={locale === 'fr' ? 'Couleur' : 'Color'}
+                                                    onClick={() => { updatePickerPosition(positionPickerRef); setShowPositionPicker(!showPositionPicker); }}
+                                                    className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center transition-transform hover:scale-105"
+                                                    title={locale === 'fr' ? 'Position' : 'Position'}
                                                 >
-                                                    <div className="w-full h-full rounded-full border border-black/10" style={{ backgroundColor: selectedElement.fill }} />
+                                                    <Maximize size={16} className="text-gray-600" />
                                                 </button>
-                                                {showElementColorPicker && createPortal(
-                                                    <div className="fixed bg-white rounded-2xl shadow-2xl p-4 border border-gray-100 z-100 w-[220px] animate-in fade-in zoom-in-95 duration-200"
+                                                {showPositionPicker && createPortal(
+                                                    <div className="fixed bg-white rounded-2xl shadow-2xl p-2 border border-gray-100 z-100 w-40 animate-in fade-in zoom-in-95 duration-200"
                                                         style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
                                                         data-dropdown-portal="true"
                                                     >
-                                                        <div className="px-1 py-0.5 mb-3">
-                                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Couleur de l\'élément' : 'Element Color'}</span>
-                                                        </div>
-                                                        <div className="flex flex-col gap-4">
-                                                            {/* Radial Rainbow Custom Selector */}
-                                                            <div className="relative group/custom">
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); customColorInputRef.current?.click(); }}
-                                                                    className="w-full h-12 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm relative overflow-hidden group border border-gray-100"
-                                                                    style={{
-                                                                        background: 'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)'
-                                                                    }}
-                                                                >
-                                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/5 transition-colors">
-                                                                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-sm flex items-center gap-2 transform transition-transform group-hover:scale-105">
-                                                                            <Plus size={12} className="text-gray-800" />
-                                                                            <span className="text-[9px] font-bold text-gray-800 uppercase tracking-tight">{locale === 'fr' ? 'Personnalisé' : 'Custom'}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </button>
-                                                                <input
-                                                                    ref={customColorInputRef}
-                                                                    type="color"
-                                                                    value={selectedElement.fill}
-                                                                    onChange={(e) => { updateSelected({ fill: e.target.value }); setShowElementColorPicker(false); }}
-                                                                    className="sr-only"
-                                                                />
-                                                            </div>
-
-                                                            {/* Palette Swatches */}
-                                                            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                                                                {COLORS.map(c => (
-                                                                    <button
-                                                                        key={c}
-                                                                        onClick={() => { updateSelected({ fill: c }); setShowElementColorPicker(false); }}
-                                                                        className="aspect-square w-8 h-8 shrink-0 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 shadow-sm"
-                                                                        style={{
-                                                                            backgroundColor: c,
-                                                                            borderColor: selectedElement.fill.toLowerCase() === c.toLowerCase() ? '#000' : c === '#ffffff' ? '#f3f4f6' : c,
-                                                                            transform: selectedElement.fill.toLowerCase() === c.toLowerCase() ? 'scale(1.1)' : 'scale(1)'
-                                                                        }}
-                                                                    />
-                                                                ))}
-                                                            </div>
-                                                        </div>
+                                                        {[
+                                                            { id: 'left', label: locale === 'fr' ? 'Gauche' : 'Left', icon: <AlignStartVertical size={14} /> },
+                                                            { id: 'center-h', label: locale === 'fr' ? 'Centre H' : 'Center H', icon: <AlignCenterVertical size={14} /> },
+                                                            { id: 'right', label: locale === 'fr' ? 'Droite' : 'Right', icon: <AlignEndVertical size={14} /> },
+                                                            { id: 'top', label: locale === 'fr' ? 'Haut' : 'Top', icon: <AlignStartHorizontal size={14} /> },
+                                                            { id: 'center-v', label: locale === 'fr' ? 'Centre V' : 'Center V', icon: <AlignCenterHorizontal size={14} /> },
+                                                            { id: 'bottom', label: locale === 'fr' ? 'Bas' : 'Bottom', icon: <AlignEndHorizontal size={14} /> },
+                                                        ].map(pos => (
+                                                            <button
+                                                                key={pos.id}
+                                                                onClick={() => { handleQuickPosition(pos.id as any); setShowPositionPicker(false); }}
+                                                                className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg text-xs font-bold text-gray-700 transition-colors flex items-center gap-2.5"
+                                                            >
+                                                                <span className="text-gray-400 group-hover:text-black">
+                                                                    {pos.icon}
+                                                                </span>
+                                                                {pos.label}
+                                                            </button>
+                                                        ))}
                                                     </div>,
                                                     document.body
                                                 )}
                                             </div>
-                                        )}
-                                        {selectedElement.type === 'text' && (
-                                            <>
-                                                <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
-                                                {/* Size */}
-                                                <div className="flex items-center gap-1 shrink-0">
-                                                    <button onClick={() => updateSelected({ fontSize: Math.max(8, (selectedElement.fontSize || 24) - 2) })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Minus size={14} /></button>
-                                                    <span className="text-sm font-bold w-8 text-center shrink-0">{Math.round(selectedElement.fontSize || 24)}</span>
-                                                    <button onClick={() => updateSelected({ fontSize: Math.min(120, (selectedElement.fontSize || 24) + 2) })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><Plus size={14} /></button>
-                                                </div>
-                                                <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
-                                                {/* Font */}
-                                                <div className="relative flex items-center shrink-0" ref={fontPickerRef}>
-                                                    <button
-                                                        onClick={() => { updatePickerPosition(fontPickerRef); setShowFontPicker(!showFontPicker); }}
-                                                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 rounded-full transition-colors min-w-[120px] justify-between"
-                                                    >
-                                                        <div className="flex items-center gap-2 overflow-hidden">
-                                                            <Type size={14} className="text-gray-400 shrink-0" />
-                                                            <span className="text-sm font-bold truncate text-gray-800" style={{ fontFamily: selectedElement.fontFamily }}>
-                                                                {selectedElement.fontFamily}
-                                                            </span>
-                                                        </div>
-                                                        <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showFontPicker ? 'rotate-180' : ''}`} />
-                                                    </button>
-
-                                                    {showFontPicker && createPortal(
-                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-52 animate-in fade-in zoom-in-95 duration-200"
-                                                            style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
-                                                            data-dropdown-portal="true"
-                                                        >
-                                                            <div className="px-3 py-1.5 mb-1">
-                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Polices' : 'Fonts'}</span>
-                                                            </div>
-                                                            <div className="max-h-64 overflow-y-auto no-scrollbar">
-                                                                {FONT_FAMILIES.map(f => (
-                                                                    <button
-                                                                        key={f}
-                                                                        onClick={() => {
-                                                                            const availableWeights = FONT_WEIGHTS[f] || ['400'];
-                                                                            const currentWeight = String(selectedElement.fontWeight || '400');
-                                                                            const newWeight = availableWeights.includes(currentWeight) ? currentWeight : availableWeights[0];
-                                                                            updateSelected({ fontFamily: f, fontWeight: newWeight });
-                                                                            setShowFontPicker(false);
-                                                                        }}
-                                                                        className={`w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center justify-between transition-colors ${selectedElement.fontFamily === f ? 'text-black bg-gray-50/50' : 'text-gray-600'}`}
-                                                                    >
-                                                                        <span style={{ fontFamily: f }} className="text-[15px]">
-                                                                            {f}
-                                                                        </span>
-                                                                        {selectedElement.fontFamily === f && (
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-black" />
-                                                                        )}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>,
-                                                        document.body
-                                                    )}
-                                                </div>
-
-                                                <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
-
-                                                {/* Weight */}
-                                                <div className="relative flex items-center shrink-0" ref={weightPickerRef}>
-                                                    <button
-                                                        onClick={() => { updatePickerPosition(weightPickerRef); setShowWeightPicker(!showWeightPicker); }}
-                                                        className="flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-gray-100 rounded-full transition-colors min-w-[70px] justify-between"
-                                                    >
-                                                        <span className="text-sm font-bold text-gray-800">
-                                                            {WEIGHT_NAMES[selectedElement.fontWeight || '400']?.[locale] || (selectedElement.fontWeight || '400')}
-                                                        </span>
-                                                        <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showWeightPicker ? 'rotate-180' : ''}`} />
-                                                    </button>
-
-                                                    {showWeightPicker && createPortal(
-                                                        <div className="fixed bg-white rounded-2xl shadow-2xl py-2 border border-gray-100 z-100 w-32 animate-in fade-in zoom-in-95 duration-200"
-                                                            style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
-                                                            data-dropdown-portal="true"
-                                                        >
-                                                            <div className="px-3 py-1.5 mb-1">
-                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{locale === 'fr' ? 'Poids' : 'Weight'}</span>
-                                                            </div>
-                                                            <div className="max-h-48 overflow-y-auto no-scrollbar">
-                                                                {(FONT_WEIGHTS[selectedElement.fontFamily] || ['400']).map(w => (
-                                                                    <button
-                                                                        key={w}
-                                                                        onClick={() => { updateSelected({ fontWeight: w }); setShowWeightPicker(false); }}
-                                                                        className={`w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center justify-between transition-colors ${String(selectedElement.fontWeight || '400') === w ? 'text-black bg-gray-50/50' : 'text-gray-600'}`}
-                                                                    >
-                                                                        <span style={{ fontFamily: selectedElement.fontFamily, fontWeight: w }} className="text-sm">
-                                                                            {WEIGHT_NAMES[w]?.[locale] || w}
-                                                                        </span>
-                                                                        {String(selectedElement.fontWeight || '400') === w && (
-                                                                            <div className="w-1.5 h-1.5 rounded-full bg-black" />
-                                                                        )}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>,
-                                                        document.body
-                                                    )}
-                                                </div>
-                                                <div className="w-px h-6 bg-gray-200 mx-2 shrink-0" />
-                                                {/* Formatting */}
-                                                <div className="flex items-center gap-1 shrink-0">
-                                                    <button onClick={() => handleToggleStyle('italic')} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${selectedElement.fontStyle?.includes('italic') ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
-                                                        <Italic size={14} />
-                                                    </button>
-                                                    <button onClick={handleToggleUnderline} className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${selectedElement.textDecoration === 'underline' ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
-                                                        <Underline size={14} />
-                                                    </button>
-                                                    <button onClick={handleCycleAlign} className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors">
-                                                        {selectedElement.align === 'center' ? <AlignCenter size={14} /> : selectedElement.align === 'right' ? <AlignRight size={14} /> : <AlignLeft size={14} />}
-                                                    </button>
-                                                </div>
-                                            </>
-                                        )}
-                                        {(selectedElement.type === 'image' || selectedElement.type === 'svg') && (
-                                            <>
-                                                <div className="flex items-center gap-1 shrink-0">
-                                                    <button
-                                                        onClick={() => handleFlip('horizontal')}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black transition-all"
-                                                        title={locale === 'fr' ? 'Retourner horizontalement' : 'Flip horizontal'}
-                                                    >
-                                                        <FlipHorizontal size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleFlip('vertical')}
-                                                        className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-black transition-all"
-                                                        title={locale === 'fr' ? 'Retourner verticalement' : 'Flip vertical'}
-                                                    >
-                                                        <FlipVertical size={14} />
-                                                    </button>
-                                                </div>
-                                                <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
-                                            </>
-                                        )}
-
-                                        {/* Rotation */}
-                                        <div className="flex items-center gap-1 shrink-0 px-1" title={locale === 'fr' ? 'Rotation' : 'Rotation'}>
-                                            <button onClick={() => updateSelected({ rotation: (selectedElement.rotation || 0) - 15 })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><RotateCcw size={14} /></button>
-                                            <div className="flex items-center">
-                                                <input
-                                                    type="number"
-                                                    className="text-sm font-bold w-8 text-center bg-transparent outline-none p-0 appearance-none m-0"
-                                                    style={{ MozAppearance: 'textfield' }} // hide spin buttons
-                                                    value={Math.round(selectedElement.rotation || 0)}
-                                                    onChange={(e) => updateSelected({ rotation: Number(e.target.value) || 0 })}
-                                                />
-                                                <span className="text-sm font-bold text-gray-800 -ml-1">°</span>
-                                            </div>
-                                            <button onClick={() => updateSelected({ rotation: (selectedElement.rotation || 0) + 15 })} className="w-7 h-7 flex items-center justify-center hover:bg-gray-100 rounded-full text-gray-700 transition-colors"><RotateCw size={14} /></button>
-                                        </div>
-
-                                        <div className="w-px h-6 bg-gray-200 mx-1 shrink-0" />
-                                        <div className="relative shrink-0" ref={positionPickerRef}>
-                                            <button
-                                                onClick={() => { updatePickerPosition(positionPickerRef); setShowPositionPicker(!showPositionPicker); }}
-                                                className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center transition-transform hover:scale-105"
-                                                title={locale === 'fr' ? 'Position' : 'Position'}
-                                            >
-                                                <Maximize size={16} className="text-gray-600" />
-                                            </button>
-                                            {showPositionPicker && createPortal(
-                                                <div className="fixed bg-white rounded-2xl shadow-2xl p-2 border border-gray-100 z-100 w-40 animate-in fade-in zoom-in-95 duration-200"
-                                                    style={{ top: `${pickerPosition.top + 8}px`, left: `${pickerPosition.left}px`, transform: 'translateX(-50%)' }}
-                                                    data-dropdown-portal="true"
-                                                >
-                                                    {[
-                                                        { id: 'left', label: locale === 'fr' ? 'Gauche' : 'Left', icon: <AlignStartVertical size={14} /> },
-                                                        { id: 'center-h', label: locale === 'fr' ? 'Centre H' : 'Center H', icon: <AlignCenterVertical size={14} /> },
-                                                        { id: 'right', label: locale === 'fr' ? 'Droite' : 'Right', icon: <AlignEndVertical size={14} /> },
-                                                        { id: 'top', label: locale === 'fr' ? 'Haut' : 'Top', icon: <AlignStartHorizontal size={14} /> },
-                                                        { id: 'center-v', label: locale === 'fr' ? 'Centre V' : 'Center V', icon: <AlignCenterHorizontal size={14} /> },
-                                                        { id: 'bottom', label: locale === 'fr' ? 'Bas' : 'Bottom', icon: <AlignEndHorizontal size={14} /> },
-                                                    ].map(pos => (
-                                                        <button
-                                                            key={pos.id}
-                                                            onClick={() => { handleQuickPosition(pos.id as any); setShowPositionPicker(false); }}
-                                                            className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg text-xs font-bold text-gray-700 transition-colors flex items-center gap-2.5"
-                                                        >
-                                                            <span className="text-gray-400 group-hover:text-black">
-                                                                {pos.icon}
-                                                            </span>
-                                                            {pos.label}
-                                                        </button>
-                                                    ))}
-                                                </div>,
-                                                document.body
-                                            )}
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                                        </>
+                                    );
+                                })()}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 </header>
 
                 {/* ── Canvas ── */}
@@ -1686,10 +1711,10 @@ export default function GrafyEditor({
                                             className={`group relative flex flex-col items-center gap-2 p-1.5 rounded-2xl transition-all duration-300 ${isActive ? 'scale-110 ' : 'hover:scale-105'}`}
                                         >
                                             <div className={`w-16 h-16 rounded-xl overflow-hidden border transition-colors duration-300 flex items-center justify-center bg-[#F9F9FB] ${isActive ? 'border-black/20' : 'border-transparent group-hover:border-black/5'}`}>
-                                                <img 
-                                                    src={sideColorImg.imageSrc} 
-                                                    alt={side.name} 
-                                                    className={`w-full h-full object-contain p-2 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} 
+                                                <img
+                                                    src={sideColorImg.imageSrc}
+                                                    alt={side.name}
+                                                    className={`w-full h-full object-contain p-2 transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}
                                                 />
                                             </div>
                                             <div className="flex flex-col items-center">
@@ -1816,7 +1841,10 @@ export default function GrafyEditor({
                     </div>
 
                     {/* Side navigation */}
-                    <div className="flex lg:hidden items-center gap-4 pb-8">
+                    <div className="flex justify-center lg:hidden items-center gap-4 pb-8 relative w-full">
+                        <button className="lg:hidden absolute left-4 w-10 h-10 shadow-lg flex items-center justify-center rounded-full hover:bg-black/10 transition-colors bg-white">
+                            <Settings size={22} strokeWidth={1.5} />
+                        </button>
                         <button onClick={prevSide} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors">
                             <ChevronLeft size={22} strokeWidth={1.5} />
                         </button>
@@ -1836,6 +1864,7 @@ export default function GrafyEditor({
                         <button onClick={nextSide} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/10 transition-colors">
                             <ChevronRight size={22} strokeWidth={1.5} />
                         </button>
+
                     </div>
 
                     {/* Floating Toolbar */}
@@ -1972,7 +2001,7 @@ export default function GrafyEditor({
 
                 {/* Bottom CTA */}
                 <div className="mt-auto p-8 border-t border-gray-100 bg-white sticky bottom-0">
-                    <button 
+                    <button
                         onClick={handleSave}
                         disabled={isSaving}
                         className="w-full py-4 bg-black text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-black/10 hover:bg-gray-800 transition-all active:scale-[0.98] disabled:opacity-50"
@@ -2011,7 +2040,7 @@ export default function GrafyEditor({
                 )}
 
                 {/* ── Bottom bar ── */}
-                <nav className="bg-white border-t border-gray-100">
+                <nav className="bg-white border-t pb-4 border-gray-100">
                     <div className="flex items-stretch">
                         {/* Products */}
                         <button

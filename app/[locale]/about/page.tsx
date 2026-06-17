@@ -2,7 +2,7 @@
 
 import { useLanguage } from '@/context/LanguageContext';
 import { Globe } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 
 export default function AboutPage() {
     const { t } = useLanguage();

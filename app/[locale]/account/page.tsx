@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';

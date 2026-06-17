@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -23,7 +23,7 @@ export default function ProductCard({ slug, nameKey, descriptionKey, price, imag
             {/* Badge */}
             {category && (
                 <div className="absolute top-6 left-6 z-10">
-                    <span className="px-3 py-1.5 text-neutral-400 text-[10px] shadow font-black uppercase rounded-full">
+                    <span className="px-3 py-1.5 text-neutral-500 text-[10px] uppercase rounded-full">
                         {category}
                     </span>
                 </div>

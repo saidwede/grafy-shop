@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { useLanguage } from '@/context/LanguageContext';
 import { MOCK_PRODUCTS } from '@/constants/products';
 import ProductGallery from '@/components/ProductGallery';

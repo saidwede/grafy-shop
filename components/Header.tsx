@@ -1,6 +1,6 @@
 "use client";
 
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 import { ShoppingBag, User, Heart, Search, ChevronDown, Languages, X as CloseIcon, ArrowRight, LayoutGrid, LogOut, Layout } from 'lucide-react';
 
 import { useLanguage } from '@/context/LanguageContext';

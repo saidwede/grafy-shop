@@ -6,7 +6,7 @@ import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useLanguage } from '@/context/LanguageContext';
 import { Lock, Loader2, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import Link from '@/components/LocalizedLink';
 
 function ResetPasswordForm() {
     const { t, locale } = useLanguage();
